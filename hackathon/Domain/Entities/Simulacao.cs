@@ -1,4 +1,5 @@
 using hackathon.Application.Dtos;
+using hackathon.Domain.ValueObjects;
 
 namespace hackathon.Domain.Entities;
 
@@ -10,6 +11,6 @@ public class Simulacao
     public decimal TaxaJuros { get; init; }
     public DateTime CriadoEm { get; init; } = DateTime.UtcNow;
 
-    public ResultadoSimulacao Sac { get; init; } = new("SAC", []);
-    public ResultadoSimulacao Price { get; init; } = new("PRICE", []);
+    public List<Parcela> Sac { get; init; } = [];
+    public List<Parcela> Price { get; init; } = [];
 }

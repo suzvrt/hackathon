@@ -33,8 +33,8 @@ public class SimularEmprestimoUseCase
             CodigoProduto = produtoIdeal.Codigo,
             DescricaoProduto = produtoIdeal.Nome,
             TaxaJuros = produtoIdeal.TaxaJuros / 1.0000000000000000000000000000m,
-            Sac = new("SAC", sac.Select(p => p.ToDto()).ToList()),
-            Price = new("PRICE", price.Select(p => p.ToDto()).ToList())
+            Sac = sac,
+            Price = price
         };
 
         // Fire and forget
@@ -45,8 +45,8 @@ public class SimularEmprestimoUseCase
             CodigoProduto: simulacao.CodigoProduto,
             DescricaoProduto: simulacao.DescricaoProduto,
             TaxaJuros: simulacao.TaxaJuros,
-            Sac: simulacao.Sac,
-            Price: simulacao.Price
+            Sac: new("SAC", simulacao.Sac.Select(p => p.ToDto()).ToList()),
+            Price: new("PRICE", simulacao.Price.Select(p => p.ToDto()).ToList())
         );
     }
 

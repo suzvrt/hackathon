@@ -37,8 +37,8 @@ public class SimulacaoRepository : ISimulacaoRepository
             { "DescricaoProduto", simulacao.DescricaoProduto },
             { "TaxaJuros", simulacao.TaxaJuros },
             { "CriadoEm", simulacao.CriadoEm },
-            { "SimulacaoSac", JsonSerializer.Serialize(simulacao.Sac, AppJsonSerializerContext.Default.ResultadoSimulacao) },
-            { "SimulacaoPrice", JsonSerializer.Serialize(simulacao.Price, AppJsonSerializerContext.Default.ResultadoSimulacao) }
+            { "SimulacaoSac", JsonSerializer.Serialize(simulacao.Sac, AppJsonSerializerContext.Default.ListParcela) },
+            { "SimulacaoPrice", JsonSerializer.Serialize(simulacao.Price, AppJsonSerializerContext.Default.ListParcela) }
         };
 
         await connection.ExecuteAsync(sql, parameters);

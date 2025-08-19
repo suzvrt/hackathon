@@ -40,8 +40,8 @@ public class RetornarSimulacoesUseCase
             CodigoProduto: simulacao.CodigoProduto,
             DescricaoProduto: simulacao.DescricaoProduto,
             TaxaJuros: simulacao.TaxaJuros,
-            Sac: simulacao.Sac,
-            Price: simulacao.Price
+            Sac: new("SAC", []),
+            Price: new("PRICE", [])
         );
     }
 }

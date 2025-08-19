@@ -1,6 +1,7 @@
 using System.Text.Json.Serialization;
-using hackathon.Application.Dto;
+using hackathon.Application.Dtos;
 using hackathon.Domain.Entities;
+using hackathon.Domain.ValueObjects;
 
 namespace hackathon.Api.Serialization;
 
@@ -10,6 +11,8 @@ namespace hackathon.Api.Serialization;
 [JsonSerializable(typeof(SimulacaoRequest))]
 [JsonSerializable(typeof(SimulacaoResponse))]
 [JsonSerializable(typeof(ResultadoSimulacao))]
+[JsonSerializable(typeof(Parcela))]
+[JsonSerializable(typeof(List<Parcela>))]
 internal partial class AppJsonSerializerContext : JsonSerializerContext
 {
 }
