@@ -1,0 +1,42 @@
+5. Modelo de chamada para listar simulações
+{
+"pagina":1,
+"qtdRegistros": 404,
+"qtdRegistrosPagina": 200,
+"registros": [
+{
+"idSimulacao": 20180702,
+"valorDesejado": 900.00,
+"prazo": 5,
+"valorTotalParcelas": 1243.28
+}
+]
+}
+6. Modelo de chamada para retornar o volume simulado por produto e por dia
+{
+"dataReferencia": "2025-07-30",
+"simulacoes": [{
+"codigoProduto":1,
+"descricaoProduto": "Produto 1",
+"taxaMediaJuro": 0.189,
+"valorMedioPrestacao": 300.00,
+"valorTotalDesejado": 12047.47,
+"valorTotalCredito": 16750.00
+}]
+}
+7. Modelo de chamada para retornar os dados de telemetria
+{
+"dataReferencia": "2025-07-30",
+"listaEndpoints": 
+[
+{
+"nomeApi": "Simulacao",
+"qtdRequisicoes": 135,
+"tempoMedio": 150, // em milisegundos,
+"tempoMinimo": 23,
+"tempoMaximo": 860,
+"percentualSucesso": 0.98 // qtd de retorno 200 com 
+relacao ao total
+}
+]
+}
