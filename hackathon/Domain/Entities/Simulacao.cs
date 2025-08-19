@@ -1,4 +1,3 @@
-using hackathon.Application.Dtos;
 using hackathon.Domain.ValueObjects;
 
 namespace hackathon.Domain.Entities;
