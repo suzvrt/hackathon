@@ -13,13 +13,13 @@ public static class DependencyInjection
     {
         var dbSettings = new DatabaseSettings
         {
-            ConnectionString = configuration.GetConnectionString("DefaultConnection") 
+            ConnectionString = configuration.GetConnectionString("DefaultConnection")
                 ?? throw new InvalidOperationException("Connection string não encontrada.")
         };
 
         var eventHubSettings = new EventHubSettings
         {
-            ConnectionString = configuration["EventHub:ConnectionString"] 
+            ConnectionString = configuration["EventHub:ConnectionString"]
                 ?? throw new InvalidOperationException("EventHub connection string não encontrada.")
         };
 
@@ -34,9 +34,10 @@ public static class DependencyInjection
 
         services.AddSingleton<SimulacaoPersistenceService>();
         services.AddHostedService(sp => sp.GetRequiredService<SimulacaoPersistenceService>());
-        services.AddScoped<ISimulacaoPersistenceService>(sp => 
+        services.AddScoped<ISimulacaoPersistenceService>(sp =>
             sp.GetRequiredService<SimulacaoPersistenceService>());
 
         services.AddScoped<SimularEmprestimoUseCase>();
+        services.AddScoped<IObterSimulacoesUseCase, ObterSimulacoesUseCase>();
     }
 }

@@ -1,3 +1,3 @@
 namespace hackathon.Application.Dtos;
 
-public record ListarRequest(int Pagina, int QtdRegistros, int QtdRegistrosPagina);
+public record ListarRequest(int Pagina, int QtdRegistrosPagina);

@@ -1,15 +1,17 @@
 namespace hackathon.Application.Dtos;
 
-public record ListarResponse(
-    int Pagina,
-    int QtdRegistros,
-    int QtdRegistrosPagina,
-    List<Registro> Registros
-);
+public sealed class SimulacaoResumo
+{
+    public Guid IdSimulacao { get; init; }
+    public decimal ValorDesejado { get; init; }
+    public int Prazo { get; init; }
+    public decimal ValorTotalParcelas { get; init; }
+}
 
-public record Registro(
-    Guid IdSimulacao,
-    decimal ValorDesejado,
-    int Prazo,
-    decimal ValorTotalParcelas
-);
+public sealed class PaginacaoResultado<T>
+{
+    public int Pagina { get; init; }
+    public int QtdRegistros { get; init; }
+    public int QtdRegistrosPagina { get; init; }
+    public IReadOnlyList<T> Registros { get; init; } = [];
+}

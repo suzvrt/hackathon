@@ -1,8 +1,10 @@
 using System.Text.Json;
 using Dapper;
 using hackathon.Api.Serialization;
+using hackathon.Application.Dtos;
 using hackathon.Application.Interfaces;
 using hackathon.Domain.Entities;
+using hackathon.Domain.ValueObjects;
 
 namespace hackathon.Infrastructure.Persistence;
 
@@ -43,16 +45,50 @@ public class SimulacaoRepository : ISimulacaoRepository
         await connection.ExecuteAsync(sql, parameters);
     }
 
-    public async Task RetornarTodosAsync()
+    public async Task<PaginacaoResultado<SimulacaoResumo>> ObterPaginadoAsync(int pagina, int qtdPorPagina)
     {
         using var connection = _connectionFactory.CreateConnection();
 
-        var sql = """
-            SELECT Id, CodigoProduto, DescricaoProduto, TaxaJuros, CriadoEm,
-                   SimulacaoSac, SimulacaoPrice
-            FROM dbo.Simulacao
-            """;
+        var offset = (pagina - 1) * qtdPorPagina;
 
-        var simulacoes = await connection.QueryAsync<Simulacao>(sql);
+        var sql = """
+            SELECT COUNT(*) FROM dbo.Simulacao;
+            SELECT Id, SimulacaoPrice
+            FROM dbo.Simulacao
+            ORDER BY CriadoEm DESC
+            OFFSET @Offset ROWS FETCH NEXT @QtdPorPagina ROWS ONLY;
+        """;
+
+        using var multi = await connection.QueryMultipleAsync(sql, new { Offset = offset, QtdPorPagina = qtdPorPagina });
+
+        var totalRegistros = await multi.ReadSingleAsync<int>();
+        var registrosBrutos = await multi.ReadAsync<(Guid Id, string SimulacaoPrice)>();
+
+        var registros = registrosBrutos
+            .Select(r =>
+            {
+                var parcelas = JsonSerializer.Deserialize<List<Parcela>>(r.SimulacaoPrice, AppJsonSerializerContext.Default.ListParcela);
+                var primeira = parcelas?.FirstOrDefault();
+                if (primeira is null)
+                    return null;
+
+                return new SimulacaoResumo
+                {
+                    IdSimulacao = r.Id,
+                    ValorDesejado = parcelas.Sum(p => p.ValorPrestacao),
+                    Prazo = parcelas.Count,
+                    ValorTotalParcelas = decimal.Round(parcelas.Sum(p => p.ValorPrestacao), 2)
+                };
+            })
+            .Where(x => x is not null)
+            .ToList();
+
+        return new PaginacaoResultado<SimulacaoResumo>
+        {
+            Pagina = pagina,
+            QtdRegistros = totalRegistros,
+            QtdRegistrosPagina = qtdPorPagina,
+            Registros = registros
+        };
     }
 }
