@@ -13,5 +13,15 @@ public class SqlConnectionFactory
         _settings = settings;
     }
 
-    public IDbConnection CreateConnection() => new SqlConnection(_settings.ConnectionString);
+    public IDbConnection CreateConnection()
+    {
+        var builder = new SqlConnectionStringBuilder(_settings.ConnectionString)
+        {
+            ApplicationIntent = ApplicationIntent.ReadWrite,
+            Encrypt = true,
+            TrustServerCertificate = true
+        };
+
+        return new SqlConnection(builder.ConnectionString);
+    }
 }

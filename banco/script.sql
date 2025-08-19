@@ -23,3 +23,13 @@ VALUES (3, 'Produto 3', 0.018200000, 49, 96, 100000.01, 1000000.00)
 INSERT INTO dbo.PRODUTO (CO_PRODUTO, NO_PRODUTO, PC_TAXA_JUROS,
 NU_MINIMO_MESES, NU_MAXIMO_MESES, VR_MINIMO, VR_MAXIMO)
 VALUES (4, 'Produto 4', 0.015100000, 96, null, 1000000.01, null)
+
+CREATE TABLE dbo.Simulacao (
+    Id uniqueidentifier PRIMARY KEY,
+    CodigoProduto int NOT NULL,
+    DescricaoProduto nvarchar(100) NOT NULL,
+    TaxaJuros decimal(18,9) NOT NULL,
+    CriadoEm datetime2 NOT NULL,
+    SimulacaoSac nvarchar(max) NOT NULL,
+    SimulacaoPrice nvarchar(max) NOT NULL
+)

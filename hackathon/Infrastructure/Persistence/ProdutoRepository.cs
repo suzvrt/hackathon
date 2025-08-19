@@ -4,6 +4,7 @@ using hackathon.Application.Interfaces;
 
 namespace hackathon.Infrastructure.Persistence;
 
+[DapperAot]
 public class ProdutoRepository : IProdutoRepository
 {
     private readonly SqlConnectionFactory _connectionFactory;
@@ -13,6 +14,7 @@ public class ProdutoRepository : IProdutoRepository
         _connectionFactory = connectionFactory;
     }
 
+    [DapperAot]
     public async Task<IEnumerable<Produto>> ObterProdutosCompativeisAsync(decimal valor, int prazo)
     {
         using var connection = _connectionFactory.CreateConnection();

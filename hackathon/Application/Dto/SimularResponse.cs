@@ -21,5 +21,5 @@ public record SimulacaoResponse(
 public static class ParcelaMapper
 {
     public static ParcelaSimulada ToDto(this Parcela p) =>
-        new(p.Numero, p.ValorAmortizacao, p.ValorJuros, p.ValorPrestacao);
+        new(p.Numero, decimal.Round(p.ValorAmortizacao, 2), decimal.Round(p.ValorJuros, 2), decimal.Round(p.ValorPrestacao, 2));
 }

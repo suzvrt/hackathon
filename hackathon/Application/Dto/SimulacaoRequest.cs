@@ -1,3 +1,3 @@
 namespace hackathon.Application.Dto;
 
-public record SimulacaoRequest(decimal ValorDesejado, int PrazoMeses);
+public record SimulacaoRequest(decimal ValorDesejado, int Prazo);
