@@ -25,7 +25,7 @@ jobs:
       run: dotnet publish ./hackathon/hackathon.csproj -c Release --os linux --arch x64
 
     - name: Upload do artefato
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: hackathon-linux-x64
         path: ./hackathon/bin/Release/net8.0/linux-x64/publish/
