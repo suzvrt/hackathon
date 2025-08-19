@@ -1,0 +1,67 @@
+version: '3.8'
+
+services:
+  # Aplicação principal
+  hackathon:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__DefaultConnection=Server=db;Database=hack;User Id=hack;Password=Password23;Encrypt=False;TrustServerCertificate=True;
+      - EventHub__ConnectionString=Endpoint=sb://eventhack.servicebus.windows.net/;SharedAccessKeyName=hack;SharedAccessKey=HeHeVaVqyVkntO2FnjQcs2Ilh/4MUDo4y+AEhKp8z+g=;EntityPath=simulacoes
+    depends_on:
+      - db
+    networks:
+      - hackathon-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Banco de dados SQL Server
+  db:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=Password23
+      - MSSQL_PID=Developer
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqlserver_data:/var/opt/mssql
+      - ./banco:/docker-entrypoint-initdb.d
+    networks:
+      - hackathon-network
+    restart: unless-stopped
+    command: >
+      bash -c "
+        /opt/mssql/bin/sqlservr &
+        sleep 30
+        /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P Password23 -i /docker-entrypoint-initdb.d/script.sql
+        wait
+      "
+
+  # Azure Storage Emulator (opcional para desenvolvimento local)
+  azurite:
+    image: mcr.microsoft.com/azure-storage/azurite:latest
+    ports:
+      - "10000:10000"
+      - "10001:10001"
+      - "10002:10002"
+    networks:
+      - hackathon-network
+    restart: unless-stopped
+
+volumes:
+  sqlserver_data:
+
+networks:
+  hackathon-network:
+    driver: bridge

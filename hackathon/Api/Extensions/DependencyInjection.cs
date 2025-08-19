@@ -11,27 +11,38 @@ public static class DependencyInjection
 {
     public static void AddHackathonServices(this IServiceCollection services, IConfiguration configuration)
     {
+        // Configuration settings
         var dbSettings = new DatabaseSettings
         {
-            ConnectionString = configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string não encontrada.")
+            ConnectionString = configuration.GetConnectionString("DefaultConnection") 
+                ?? throw new InvalidOperationException("Connection string não encontrada.")
         };
 
         var eventHubSettings = new EventHubSettings
         {
-            ConnectionString = configuration["EventHub:ConnectionString"] ?? throw new InvalidOperationException("EventHub connection string não encontrada."),
-            EventHubName = configuration["EventHub:Name"] ?? throw new InvalidOperationException("EventHub name não encontrado.")
+            ConnectionString = configuration["EventHub:ConnectionString"] 
+                ?? throw new InvalidOperationException("EventHub connection string não encontrada.")
         };
 
-        services.AddSingleton(eventHubSettings);
+        // Settings
         services.AddSingleton(dbSettings);
+        services.AddSingleton(eventHubSettings);
+
+        // Infrastructure - Database
+        services.AddSingleton<SqlConnectionFactory>();
+        services.AddScoped<IProdutoRepository, ProdutoRepository>();
+        services.AddScoped<ISimulacaoRepository, SimulacaoRepository>();
+
+        // Infrastructure - Event Publishing
+        services.AddSingleton<IEventPublisher, EventHubPublisher>();
+
+        // Background Processing
         services.AddSingleton<SimulacaoPersistenceService>();
         services.AddHostedService(sp => sp.GetRequiredService<SimulacaoPersistenceService>());
         services.AddScoped<ISimulacaoPersistenceService>(sp => 
             sp.GetRequiredService<SimulacaoPersistenceService>());
-        services.AddSingleton<IEventPublisher, EventHubPublisher>();
-        services.AddScoped<ISimulacaoRepository, SimulacaoRepository>();
-        services.AddSingleton<SqlConnectionFactory>();
-        services.AddScoped<IProdutoRepository, ProdutoRepository>();
+
+        // Application Services
         services.AddScoped<SimularEmprestimoUseCase>();
     }
 }

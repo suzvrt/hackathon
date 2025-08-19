@@ -3,6 +3,7 @@ using Dapper;
 using hackathon.Api.Serialization;
 using hackathon.Application.Interfaces;
 using hackathon.Domain.Entities;
+using hackathon.Domain.ValueObjects;
 
 namespace hackathon.Infrastructure.Persistence;
 
@@ -29,15 +30,30 @@ public class SimulacaoRepository : ISimulacaoRepository
             )
             """;
 
-        await connection.ExecuteAsync(sql, new
+        var parameters = new Dictionary<string, object>
         {
-            simulacao.Id,
-            simulacao.CodigoProduto,
-            simulacao.DescricaoProduto,
-            TaxaJuros = JsonSerializer.Serialize(simulacao.TaxaJuros, AppJsonSerializerContext.Default.Decimal),
-            CriadoEm = JsonSerializer.Serialize(simulacao.CriadoEm, AppJsonSerializerContext.Default.DateTime),
-            SimulacaoSac = JsonSerializer.Serialize(simulacao.Sac, AppJsonSerializerContext.Default.ResultadoSimulacao),
-            SimulacaoPrice = JsonSerializer.Serialize(simulacao.Price, AppJsonSerializerContext.Default.ResultadoSimulacao)
-        });
+            { "Id", simulacao.Id },
+            { "CodigoProduto", simulacao.CodigoProduto },
+            { "DescricaoProduto", simulacao.DescricaoProduto },
+            { "TaxaJuros", simulacao.TaxaJuros },
+            { "CriadoEm", simulacao.CriadoEm },
+            { "SimulacaoSac", JsonSerializer.Serialize(simulacao.Sac, AppJsonSerializerContext.Default.ResultadoSimulacao) },
+            { "SimulacaoPrice", JsonSerializer.Serialize(simulacao.Price, AppJsonSerializerContext.Default.ResultadoSimulacao) }
+        };
+
+        await connection.ExecuteAsync(sql, parameters);
+    }
+
+    public async Task RetornarTodosAsync()
+    {
+        using var connection = _connectionFactory.CreateConnection();
+
+        var sql = """
+            SELECT Id, CodigoProduto, DescricaoProduto, TaxaJuros, CriadoEm,
+                   SimulacaoSac, SimulacaoPrice
+            FROM dbo.Simulacao
+            """;
+
+        var simulacoes = await connection.QueryAsync<Simulacao>(sql);
     }
 }

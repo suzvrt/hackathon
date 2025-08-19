@@ -1,0 +1,59 @@
+# Arquivos de build e desenvolvimento
+bin/
+obj/
+*.user
+*.suo
+*.cache
+*.log
+
+# Arquivos de configuração local
+appsettings.Development.json
+appsettings.Local.json
+*.Development.json
+
+# Arquivos de IDE
+.vs/
+.vscode/
+*.sln.docstates
+
+# Arquivos temporários
+*.tmp
+*.temp
+*.swp
+*.swo
+
+# Arquivos de teste
+**/TestResults/
+**/Tests/
+**/*.Tests.csproj
+
+# Arquivos de documentação
+README.md
+*.md
+docs/
+
+# Arquivos de controle de versão
+.git/
+.gitignore
+
+# Arquivos de Docker
+Dockerfile*
+docker-compose*
+.dockerignore
+
+# Arquivos de CI/CD
+.github/
+.gitlab-ci.yml
+azure-pipelines.yml
+
+# Arquivos de banco de dados
+banco/
+*.sql
+
+# Arquivos de backup
+*.bak
+*.backup
+
+# Arquivos de log
+logs/
+*.log

@@ -13,7 +13,7 @@ public class EventHubPublisher : IEventPublisher, IAsyncDisposable
 
     public EventHubPublisher(EventHubSettings settings)
     {
-        _producerClient = new EventHubProducerClient(settings.ConnectionString, settings.EventHubName);
+        _producerClient = new EventHubProducerClient(settings.ConnectionString);
     }
 
     public async Task PublishAsync<T>(T message, CancellationToken cancellationToken = default)
