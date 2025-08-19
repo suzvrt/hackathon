@@ -1,4 +1,4 @@
-namespace hackathon.Application.Dto;
+namespace hackathon.Application.Dtos;
 
 public record ListarResponse(
     int Pagina,

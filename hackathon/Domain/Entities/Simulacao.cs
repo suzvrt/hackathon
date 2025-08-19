@@ -1,4 +1,4 @@
-using hackathon.Application.Dto;
+using hackathon.Application.Dtos;
 
 namespace hackathon.Domain.Entities;
 

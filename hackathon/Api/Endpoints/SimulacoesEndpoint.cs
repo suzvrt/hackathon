@@ -1,4 +1,4 @@
-using hackathon.Application.Dto;
+using hackathon.Application.Dtos;
 using hackathon.Application.UseCases;
 
 namespace hackathon.Api.Endpoints;

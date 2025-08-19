@@ -33,7 +33,7 @@ hackathon/
 │   ├── Extensions/        # Configurações e extensões
 │   └── Serialization/     # Configurações de serialização JSON
 ├── Application/           # Camada de aplicação
-│   ├── Dto/              # Objetos de transferência de dados
+│   ├── Dtoss/              # Objetos de transferência de dados
 │   ├── Interfaces/       # Contratos e interfaces
 │   └── UseCases/         # Casos de uso da aplicação
 ├── Domain/               # Camada de domínio

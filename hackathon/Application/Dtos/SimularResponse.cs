@@ -1,6 +1,6 @@
 using hackathon.Domain.ValueObjects;
 
-namespace hackathon.Application.Dto;
+namespace hackathon.Application.Dtos;
 
 public record ParcelaSimulada(int Numero, decimal ValorAmortizacao, decimal ValorJuros, decimal ValorPrestacao);
 

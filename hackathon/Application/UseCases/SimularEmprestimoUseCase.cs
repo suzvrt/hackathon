@@ -1,4 +1,4 @@
-using hackathon.Application.Dto;
+using hackathon.Application.Dtos;
 using hackathon.Application.Interfaces;
 using hackathon.Domain.Entities;
 using hackathon.Domain.ValueObjects;
