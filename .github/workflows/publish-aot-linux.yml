@@ -1,0 +1,31 @@
+name: Publish Native AOT for Linux
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout código
+      uses: actions/checkout@v3
+
+    - name: Instalar .NET SDK
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+
+    - name: Restaurar pacotes
+      run: dotnet restore ./hackathon/hackathon.csproj
+
+    - name: Publicar Native AOT para Linux x64
+      run: dotnet publish ./hackathon/hackathon.csproj -c Release --os linux --arch x64
+
+    - name: Upload do artefato
+      uses: actions/upload-artifact@v3
+      with:
+        name: hackathon-linux-x64
+        path: ./hackathon/bin/Release/net8.0/linux-x64/publish/
