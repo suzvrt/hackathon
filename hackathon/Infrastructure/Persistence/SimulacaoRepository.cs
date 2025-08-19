@@ -59,7 +59,13 @@ public class SimulacaoRepository : ISimulacaoRepository
             OFFSET @Offset ROWS FETCH NEXT @QtdPorPagina ROWS ONLY;
         """;
 
-        using var multi = await connection.QueryMultipleAsync(sql, new { Offset = offset, QtdPorPagina = qtdPorPagina });
+        var parameters = new DynamicParameters();
+        parameters.Add("Offset", offset);
+        parameters.Add("QtdPorPagina", qtdPorPagina);
+
+        var command = new CommandDefinition(sql, parameters);
+
+        using var multi = await connection.QueryMultipleAsync(command);
 
         var totalRegistros = await multi.ReadSingleAsync<int>();
         var registrosBrutos = await multi.ReadAsync<(Guid Id, string SimulacaoPrice)>();
@@ -68,14 +74,13 @@ public class SimulacaoRepository : ISimulacaoRepository
             .Select(r =>
             {
                 var parcelas = JsonSerializer.Deserialize<List<Parcela>>(r.SimulacaoPrice, AppJsonSerializerContext.Default.ListParcela);
-                var primeira = parcelas?.FirstOrDefault();
-                if (primeira is null)
+                if (parcelas is null || parcelas.Count == 0)
                     return null;
 
                 return new SimulacaoResumo
                 {
                     IdSimulacao = r.Id,
-                    ValorDesejado = parcelas.Sum(p => p.ValorPrestacao),
+                    ValorDesejado = decimal.Round(parcelas.Sum(p => p.ValorPrestacao), 2),
                     Prazo = parcelas.Count,
                     ValorTotalParcelas = decimal.Round(parcelas.Sum(p => p.ValorPrestacao), 2)
                 };
