@@ -71,7 +71,7 @@ public class ProdutoRepository : IProdutoRepository
             .GroupBy(row => (int)row.CodigoProduto) // Agrupa pelo código do produto
             .Select(group =>
             {
-                // Para cada produto, coletamos todas as parcelas de todas as suas simulações
+                // Para cada produto, coletamos todas as parcelas Price de todas as suas simulações
                 var todasAsParcelas = new List<Parcela>();
                 foreach (var row in group)
                 {
@@ -94,12 +94,12 @@ public class ProdutoRepository : IProdutoRepository
                     DescricaoProduto = (string)primeiroRegistro.DescricaoProduto,
 
                     // Calculando as médias e somas para o grupo
-                    TaxaMediaJuro = group.Average(row => (decimal?)row.TaxaJuros ?? 0m),
-                    ValorTotalDesejado = group.Sum(row => (decimal?)row.ValorDesejado ?? 0m),
+                    TaxaMediaJuro = group.Average(row => (decimal?)row.TaxaJuros ?? 0m) / 1.0000000000000000000000000000m,
+                    ValorTotalDesejado = decimal.Round(group.Sum(row => (decimal?)row.ValorDesejado ?? 0m), 2),
 
                     // Cálculos baseados nos dados desserializados do JSON
-                    ValorMedioPrestacao = todasAsParcelas.Any() ? todasAsParcelas.Average(p => p.ValorPrestacao) : 0m,
-                    ValorTotalCredito = todasAsParcelas.Any() ? todasAsParcelas.Sum(p => p.ValorPrestacao) : 0m
+                    ValorMedioPrestacao = todasAsParcelas.Any() ? decimal.Round(todasAsParcelas.Average(p => p.ValorPrestacao), 2) : 0m,
+                    ValorTotalCredito = todasAsParcelas.Any() ? decimal.Round(todasAsParcelas.Sum(p => p.ValorPrestacao), 2) : 0m
                 };
             })
             .ToList();
