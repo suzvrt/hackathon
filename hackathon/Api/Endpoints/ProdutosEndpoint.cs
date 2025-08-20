@@ -11,6 +11,6 @@ public static class ProdutosEndpoint
         {
             var resultado = await useCase.ExecutarAsync(dataReferencia);
             return Results.Ok(resultado);
-        }).WithName("ObterVolumeDiario");
+        }).WithDisplayName("ObterVolumeDiario");
     }
 }

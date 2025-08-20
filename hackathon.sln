@@ -1,8 +1,10 @@
-Microsoft Visual Studio Solution File, Format Version 12.00
+﻿Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "hackathon", "hackathon\hackathon.csproj", "{CAED2455-5213-432E-8187-2012222F1EB9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "hackathon.Tests", "hackathon.Tests\hackathon.Tests.csproj", "{D7B0C94F-C336-46CA-BEA5-EC9BAD08B36E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -17,5 +19,9 @@ Global
 		{CAED2455-5213-432E-8187-2012222F1EB9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CAED2455-5213-432E-8187-2012222F1EB9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CAED2455-5213-432E-8187-2012222F1EB9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D7B0C94F-C336-46CA-BEA5-EC9BAD08B36E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D7B0C94F-C336-46CA-BEA5-EC9BAD08B36E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D7B0C94F-C336-46CA-BEA5-EC9BAD08B36E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D7B0C94F-C336-46CA-BEA5-EC9BAD08B36E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
