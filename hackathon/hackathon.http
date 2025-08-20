@@ -19,3 +19,21 @@ GET {{hackathon_HostAddress}}/Volume?dataReferencia=2025-08-20
 Accept: application/json
 
 ###
+
+### Teste de Telemetria
+GET {{hackathon_HostAddress}}/Telemetria
+
+### Teste de Telemetria com data específica
+GET {{hackathon_HostAddress}}/Telemetria?dataReferencia=2025-01-27
+
+### Teste de Simulação (para gerar dados de telemetria)
+POST {{hackathon_HostAddress}}/Simulacao
+Content-Type: application/json
+
+{
+    "valorDesejado": 10000,
+    "codigoProduto": 1
+}
+
+### Teste de Produtos (para gerar dados de telemetria)
+GET {{hackathon_HostAddress}}/Produtos

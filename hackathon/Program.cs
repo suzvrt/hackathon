@@ -2,6 +2,7 @@ using hackathon.Api.Endpoints;
 using hackathon.Api.Extensions;
 using hackathon.Api.Serialization;
 using hackathon.Infrastructure.Persistence;
+using hackathon.Api.Middleware;
 
 var builder = WebApplication.CreateSlimBuilder(args);
 
@@ -25,5 +26,9 @@ using (var scope = app.Services.CreateScope())
 // Mapeamento de endpoints
 app.MapSimulacoes();
 app.MapProdutos();
+app.MapTelemetria();
+
+// Adicionar middleware de telemetria
+app.UseTelemetria();
 
 app.Run();

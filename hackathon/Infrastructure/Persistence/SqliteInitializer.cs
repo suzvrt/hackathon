@@ -51,5 +51,37 @@ public class SqliteInitializer : ISqliteInitializer
         {
             await command.ExecuteNonQueryAsync();
         }
+
+        // Criar tabela Telemetria
+        var createTelemetriaTable = """
+            CREATE TABLE IF NOT EXISTS Telemetria (
+                Id TEXT PRIMARY KEY,
+                DataReferencia TEXT NOT NULL,
+                NomeApi TEXT NOT NULL,
+                QtdRequisicoes INTEGER NOT NULL,
+                TempoMedio INTEGER NOT NULL,
+                TempoMinimo INTEGER NOT NULL,
+                TempoMaximo INTEGER NOT NULL,
+                PercentualSucesso NUMERIC(5,4) NOT NULL,
+                CriadoEm TEXT NOT NULL
+            );
+            """;
+
+        using (var command = new SqliteCommand(createTelemetriaTable, connection))
+        {
+            await command.ExecuteNonQueryAsync();
+        }
+
+        // Criar índices para telemetria
+        var createTelemetriaIndexes = """
+            CREATE INDEX IF NOT EXISTS IX_Telemetria_DataReferencia ON Telemetria(DataReferencia);
+            CREATE INDEX IF NOT EXISTS IX_Telemetria_NomeApi ON Telemetria(NomeApi);
+            CREATE INDEX IF NOT EXISTS IX_Telemetria_DataReferencia_NomeApi ON Telemetria(DataReferencia, NomeApi);
+            """;
+
+        using (var command = new SqliteCommand(createTelemetriaIndexes, connection))
+        {
+            await command.ExecuteNonQueryAsync();
+        }
     }
 }

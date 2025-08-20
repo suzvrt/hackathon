@@ -16,7 +16,8 @@ namespace hackathon.Api.Serialization;
 [JsonSerializable(typeof(ResultadoSimulacao))]
 [JsonSerializable(typeof(Parcela))]
 [JsonSerializable(typeof(List<Parcela>))]
-[JsonSerializable(typeof(VolumeSimuladoDiario))] 
+[JsonSerializable(typeof(VolumeSimuladoDiario))]
+[JsonSerializable(typeof(TelemetriaResponse))]
 internal partial class AppJsonSerializerContext : JsonSerializerContext
 {
 }

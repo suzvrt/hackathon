@@ -18,6 +18,12 @@ Este projeto é uma API de simulação de empréstimos desenvolvida em .NET 8 co
 - **Background Services**: Serviços em background para persistência de dados
 - **Escalabilidade**: Permite processar múltiplas simulações simultaneamente
 
+### Sistema de Telemetria Avançado
+- **Monitoramento Automático**: Middleware que captura métricas de todos os endpoints
+- **Métricas em Tempo Real**: Contagem de requisições, tempo de resposta e taxa de sucesso
+- **Persistência Inteligente**: Dados são descarregados a cada 5 minutos para otimizar memória
+- **Análise Histórica**: Consultas por data específica ou intervalo de datas
+
 ### Arquitetura Limpa
 - **Domain-Driven Design**: Separação clara entre domínio, aplicação e infraestrutura
 - **Use Cases**: Lógica de negócio encapsulada em casos de uso específicos
@@ -31,6 +37,7 @@ hackathon/
 ├── Api/                    # Camada de apresentação
 │   ├── Endpoints/         # Endpoints da API
 │   ├── Extensions/        # Configurações e extensões
+│   ├── Middleware/        # Middleware de telemetria
 │   └── Serialization/     # Configurações de serialização JSON
 ├── Application/           # Camada de aplicação
 │   ├── Dtos/              # Objetos de transferência de dados
@@ -43,7 +50,8 @@ hackathon/
 │   ├── BackgroundServices/ # Serviços em background
 │   ├── Config/           # Configurações
 │   ├── Events/           # Publicação de eventos
-│   └── Persistence/      # Repositórios e acesso a dados
+│   ├── Persistence/      # Repositórios e acesso a dados
+│   └── Services/         # Serviços de infraestrutura
 └── banco/                # Scripts de banco de dados
 ```
 
@@ -52,8 +60,9 @@ hackathon/
 - **.NET 8**: Framework principal com suporte a Native AOT
 - **Dapper**: Micro ORM para acesso a dados SQL Server
 - **Dapper.AOT**: Extensão AOT para Dapper
+- **SQLite**: Banco de dados local para desenvolvimento e telemetria
 - **Azure Event Hubs**: Mensageria para eventos
-- **SQL Server**: Banco de dados relacional
+- **SQL Server**: Banco de dados relacional principal
 - **Docker**: Containerização da aplicação
 
 ## 📊 Funcionalidades
@@ -64,10 +73,18 @@ hackathon/
 - **Produtos Flexíveis**: Diferentes faixas de valor e prazo
 - **Taxas Personalizadas**: Taxas de juros específicas por produto
 
-### API REST
-- **Endpoint POST**: `/simulacoes` para criação de simulações
-- **Validação**: Verificação de compatibilidade de produtos
-- **Resposta Rápida**: Retorno imediato com ID da simulação
+### API REST Completa
+- **POST `/Simulacao`**: Criação de simulações de empréstimo
+- **GET `/Simulacao`**: Listagem paginada de simulações realizadas
+- **GET `/Volume`**: Relatório de volume diário por produto
+- **GET `/Telemetria`**: Métricas de telemetria por data
+- **GET `/Telemetria/Range`**: Métricas de telemetria por intervalo de datas
+
+### Sistema de Telemetria
+- **Monitoramento Automático**: Captura automática de métricas de todos os endpoints
+- **Métricas de Performance**: Tempo de resposta, contagem de requisições, taxa de sucesso
+- **Persistência Otimizada**: Dados são descarregados periodicamente para otimizar memória
+- **Consultas Flexíveis**: Análise por data específica ou intervalo de datas
 
 ### Processamento em Background
 - **Persistência Assíncrona**: Salvamento de simulações sem impacto na performance
@@ -79,12 +96,139 @@ hackathon/
 ### Tabelas
 - **PRODUTO**: Cadastro de produtos financeiros com faixas de valor e prazo
 - **SIMULACAO**: Histórico de simulações realizadas
+- **TELEMETRIA**: Métricas de performance dos endpoints
+
+## 🌐 Endpoints da API
+
+### Simulações
+#### POST `/Simulacao`
+Cria uma nova simulação de empréstimo.
+
+**Request:**
+```json
+{
+  "valorDesejado": 50000.00,
+  "prazo": 36
+}
+```
+
+**Response:**
+```json
+{
+  "idSimulacao": 12345,
+  "codigoProduto": 2,
+  "descricaoProduto": "Produto 2",
+  "taxaJuros": 0.0175,
+  "sac": {
+    "tipo": "SAC",
+    "parcelas": [...]
+  },
+  "price": {
+    "tipo": "PRICE",
+    "parcelas": [...]
+  }
+}
+```
+
+#### GET `/Simulacao`
+Lista simulações realizadas com paginação.
+
+**Query Parameters:**
+- `pagina` (opcional): Número da página (padrão: 1)
+- `qtdRegistrosPagina` (opcional): Registros por página (padrão: 200)
+
+**Response:**
+```json
+{
+  "pagina": 1,
+  "qtdRegistros": 150,
+  "qtdRegistrosPagina": 200,
+  "registros": [
+    {
+      "idSimulacao": 12345,
+      "valorDesejado": 50000.00,
+      "prazo": 36,
+      "valorTotalParcelas": 65000.00
+    }
+  ]
+}
+```
+
+### Produtos e Volume
+#### GET `/Volume`
+Obtém relatório de volume diário por produto.
+
+**Query Parameters:**
+- `dataReferencia` (obrigatório): Data de referência no formato YYYY-MM-DD
+
+**Response:**
+```json
+{
+  "dataReferencia": "2025-01-27",
+  "simulacoes": [
+    {
+      "codigoProduto": 1,
+      "descricaoProduto": "Produto 1",
+      "taxaMediaJuro": 0.0150,
+      "valorMedioPrestacao": 1500.00,
+      "valorTotalDesejado": 50000.00,
+      "valorTotalCredito": 54000.00
+    }
+  ]
+}
+```
+
+### Telemetria
+#### GET `/Telemetria`
+Obtém métricas de telemetria para uma data específica.
+
+**Query Parameters:**
+- `dataReferencia` (opcional): Data de referência (padrão: data atual)
+
+**Response:**
+```json
+{
+  "dataReferencia": "2025-01-27",
+  "listaEndpoints": [
+    {
+      "nomeApi": "Simulacao",
+      "qtdRequisicoes": 150,
+      "tempoMedio": 45,
+      "tempoMinimo": 12,
+      "tempoMaximo": 120,
+      "percentualSucesso": 98.5
+    }
+  ]
+}
+```
+
+#### GET `/Telemetria/Range`
+Obtém métricas de telemetria para um intervalo de datas.
+
+**Query Parameters:**
+- `inicio` (obrigatório): Data de início no formato YYYY-MM-DD
+- `fim` (obrigatório): Data de fim no formato YYYY-MM-DD
+
+**Response:**
+```json
+[
+  {
+    "dataReferencia": "2025-01-27",
+    "listaEndpoints": [...]
+  },
+  {
+    "dataReferencia": "2025-01-26",
+    "listaEndpoints": [...]
+  }
+]
+```
 
 ## 🚀 Como Executar
 
 ### Pré-requisitos
 - .NET 8 SDK
-- SQL Server
+- SQL Server (para produção)
+- SQLite (para desenvolvimento local)
 - Docker (opcional)
 
 ### Execução Local
@@ -126,33 +270,29 @@ docker-compose up --build
 - **Escalabilidade**: Suporte a múltiplas requisições simultâneas
 - **Resiliência**: Recuperação automática de falhas
 
-## 📝 Exemplo de Uso
+## 📊 Sistema de Telemetria
 
-### Request
-```json
-POST /simulacoes
-{
-  "valorDesejado": 50000.00,
-  "prazo": 36
-}
-```
+- **Monitoramento Automático**: Middleware captura métricas de todos os endpoints
+- **Métricas em Tempo Real**: Contagem de requisições, tempo de resposta e taxa de sucesso
+- **Persistência Inteligente**: Dados são descarregados a cada 5 minutos para otimizar memória
+- **Análise Histórica**: Consultas por data específica ou intervalo de datas
+- **Performance**: Não impacta a performance da aplicação principal
 
-### Response
-```json
-{
-  "idSimulacao": 12345,
-  "codigoProduto": 2,
-  "descricaoProduto": "Produto 2",
-  "taxaJuros": 0.0175,
-  "sac": {
-    "tipo": "SAC",
-    "parcelas": [...]
-  },
-  "price": {
-    "tipo": "PRICE",
-    "parcelas": [...]
-  }
-}
+## 📝 Exemplos de Uso
+
+### Testando a API
+O projeto inclui um arquivo `hackathon.http` com exemplos de todas as requisições disponíveis para testar a API.
+
+### Monitoramento de Performance
+```bash
+# Ver métricas do dia atual
+GET /Telemetria
+
+# Ver métricas de uma data específica
+GET /Telemetria?dataReferencia=2025-01-27
+
+# Ver métricas de um período
+GET /Telemetria/Range?inicio=2025-01-01&fim=2025-01-31
 ```
 
 ## 🤝 Contribuição
@@ -160,6 +300,7 @@ POST /simulacoes
 Este projeto foi desenvolvido como parte de um hackathon, demonstrando:
 - Arquitetura moderna com .NET 8
 - Implementação de padrões de alta performance
+- Sistema de telemetria avançado
 - Uso de tecnologias cloud-ready
 - Boas práticas de desenvolvimento
 

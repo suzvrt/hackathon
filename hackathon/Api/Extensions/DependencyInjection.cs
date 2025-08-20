@@ -4,6 +4,7 @@ using hackathon.Infrastructure.BackgroundServices;
 using hackathon.Infrastructure.Config;
 using hackathon.Infrastructure.Events;
 using hackathon.Infrastructure.Persistence;
+using hackathon.Infrastructure.Services;
 
 namespace hackathon.Api.Extensions;
 
@@ -49,5 +50,9 @@ public static class DependencyInjection
         services.AddScoped<ISimularEmprestimoUseCase, SimularEmprestimoUseCase>();
         services.AddScoped<IObterSimulacoesUseCase, ObterSimulacoesUseCase>();
         services.AddScoped<IObterVolumeDiarioUseCase, ObterVolumeDiarioUseCase>();
+        
+        // Serviços de telemetria
+        services.AddSingleton<ITelemetriaRepository, TelemetriaRepository>();
+        services.AddSingleton<ITelemetriaService, TelemetriaService>();
     }
 }

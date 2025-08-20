@@ -36,8 +36,7 @@
             "tempoMedio": 150, // em milisegundos,
             "tempoMinimo": 23,
             "tempoMaximo": 860,
-            "percentualSucesso": 0.98 // qtd de retorno 200 com 
-relacao ao total
+            "percentualSucesso": 0.98 // qtd de retorno 200 com relacao ao total
         }
     ]
 }
