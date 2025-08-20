@@ -1,6 +1,7 @@
 using hackathon.Api.Endpoints;
 using hackathon.Api.Extensions;
 using hackathon.Api.Serialization;
+using hackathon.Infrastructure.Persistence;
 
 var builder = WebApplication.CreateSlimBuilder(args);
 
@@ -13,6 +14,13 @@ builder.Services.ConfigureHttpJsonOptions(options =>
 });
 
 var app = builder.Build();
+
+// Inicializar banco de dados SQLite
+using (var scope = app.Services.CreateScope())
+{
+    var sqliteInitializer = scope.ServiceProvider.GetRequiredService<ISqliteInitializer>();
+    await sqliteInitializer.InitializeAsync();
+}
 
 // Mapeamento de endpoints
 app.MapSimulacoes();

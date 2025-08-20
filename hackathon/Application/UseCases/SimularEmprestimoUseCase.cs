@@ -38,7 +38,7 @@ public class SimularEmprestimoUseCase : ISimularEmprestimoUseCase
             Price = price
         };
 
-        // Fire and forget
+        // Executar e esquecer (fire and forget)
         _ = _persistenceService.EnqueueAsync(simulacao);
 
         return new SimulacaoResponse(

@@ -9,19 +9,19 @@ namespace hackathon.Infrastructure.Persistence;
 
 public class SimulacaoRepository : ISimulacaoRepository
 {
-    private readonly SqlConnectionFactory _connectionFactory;
+    private readonly HybridConnectionFactory _connectionFactory;
 
-    public SimulacaoRepository(SqlConnectionFactory connectionFactory)
+    public SimulacaoRepository(HybridConnectionFactory connectionFactory)
     {
         _connectionFactory = connectionFactory;
     }
 
     public async Task SalvarAsync(Simulacao simulacao)
     {
-        using var connection = _connectionFactory.CreateConnection();
+        using var connection = _connectionFactory.CreateConnection(DatabaseType.Sqlite);
 
         var sql = """
-            INSERT INTO dbo.Simulacao (
+            INSERT INTO Simulacao (
                 Id, ValorDesejado, CodigoProduto, DescricaoProduto, TaxaJuros, CriadoEm,
                 SimulacaoSac, SimulacaoPrice
             ) VALUES (
@@ -47,16 +47,16 @@ public class SimulacaoRepository : ISimulacaoRepository
 
     public async Task<PaginacaoResultado<SimulacaoResumo>> ObterPaginadoAsync(int pagina, int qtdRegistrosPagina)
     {
-        using var connection = _connectionFactory.CreateConnection();
+        using var connection = _connectionFactory.CreateConnection(DatabaseType.Sqlite);
 
         var offset = (pagina - 1) * qtdRegistrosPagina;
 
-        var countSql = "SELECT COUNT(*) FROM dbo.Simulacao;";
+        var countSql = "SELECT COUNT(*) FROM Simulacao;";
         var dataSql = """
                   SELECT Id, SimulacaoPrice, ValorDesejado
-                  FROM dbo.Simulacao
+                  FROM Simulacao
                   ORDER BY CriadoEm DESC
-                  OFFSET @Offset ROWS FETCH NEXT @QtdRegistrosPagina ROWS ONLY;
+                  LIMIT @QtdRegistrosPagina OFFSET @Offset;
                   """;
 
         var parameters = new DynamicParameters();
@@ -81,7 +81,16 @@ public class SimulacaoRepository : ISimulacaoRepository
         var registros = registrosBrutos
             .Select(row =>
             {
-                var id = ((Guid)row.Id).GetHashCode();
+                var idString = (string)row.Id;
+                int id;
+                if (Guid.TryParse(idString, out var guid))
+                {
+                    id = guid.GetHashCode();
+                }
+                else
+                {
+                    id = idString.GetHashCode();
+                }
                 var simulacaoPrice = (string)row.SimulacaoPrice;
                 var valorDesejado = (decimal?)row.ValorDesejado ?? 0m;;
 

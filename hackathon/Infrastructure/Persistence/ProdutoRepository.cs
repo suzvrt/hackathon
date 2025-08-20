@@ -11,9 +11,9 @@ namespace hackathon.Infrastructure.Persistence;
 [DapperAot]
 public class ProdutoRepository : IProdutoRepository
 {
-    private readonly SqlConnectionFactory _connectionFactory;
+    private readonly HybridConnectionFactory _connectionFactory;
 
-    public ProdutoRepository(SqlConnectionFactory connectionFactory)
+    public ProdutoRepository(HybridConnectionFactory connectionFactory)
     {
         _connectionFactory = connectionFactory;
     }
@@ -21,7 +21,8 @@ public class ProdutoRepository : IProdutoRepository
     [DapperAot]
     public async Task<IEnumerable<Produto>> ObterProdutosCompativeisAsync(decimal valor, int prazo)
     {
-        using var connection = _connectionFactory.CreateConnection();
+        // Este método DEVE usar SQL Server conforme os requisitos
+        using var connection = _connectionFactory.CreateConnection(DatabaseType.SqlServer);
 
         var sql = """
             SELECT CO_PRODUTO AS Codigo,
@@ -41,15 +42,15 @@ public class ProdutoRepository : IProdutoRepository
     
     public async Task<VolumeSimuladoDiario> ObterVolumeSimuladoPorDiaAsync(DateOnly dataReferencia)
     {
-        using var connection = _connectionFactory.CreateConnection();
+        // Este método agora usa SQLite
+        using var connection = _connectionFactory.CreateConnection(DatabaseType.Sqlite);
 
-        // 1. A query SQL busca todos os dados brutos necessários para o dia especificado.
-        //    Os cálculos serão feitos na aplicação.
+        // Query SQLite - observe o tratamento diferente de data e estrutura da tabela
         var sql = """
                   SELECT 
                       CodigoProduto, DescricaoProduto, TaxaJuros, ValorDesejado, SimulacaoPrice
-                  FROM dbo.Simulacao
-                  WHERE CAST(CriadoEm AS DATE) = @DataReferencia
+                  FROM Simulacao
+                  WHERE date(CriadoEm) = @DataReferencia
                   """;
 
         var parameters = new DynamicParameters();

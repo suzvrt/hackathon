@@ -14,19 +14,28 @@ public static class DependencyInjection
         var dbSettings = new DatabaseSettings
         {
             ConnectionString = configuration.GetConnectionString("DefaultConnection")
-                ?? throw new InvalidOperationException("Connection string não encontrada.")
+                ?? throw new InvalidOperationException("String de conexão não encontrada.")
+        };
+
+        var sqliteSettings = new SqliteSettings
+        {
+            DatabasePath = configuration["Sqlite:DatabasePath"] ?? "hackathon.db",
+            ConnectionString = configuration["Sqlite:ConnectionString"] ?? "Data Source=hackathon.db;Cache=Shared;"
         };
 
         var eventHubSettings = new EventHubSettings
         {
             ConnectionString = configuration["EventHub:ConnectionString"]
-                ?? throw new InvalidOperationException("EventHub connection string não encontrada.")
+                ?? throw new InvalidOperationException("String de conexão do EventHub não encontrada.")
         };
 
         services.AddSingleton(dbSettings);
+        services.AddSingleton(sqliteSettings);
         services.AddSingleton(eventHubSettings);
 
-        services.AddSingleton<SqlConnectionFactory>();
+        services.AddSingleton<HybridConnectionFactory>();
+        services.AddSingleton<IHybridConnectionFactory>(sp => sp.GetRequiredService<HybridConnectionFactory>());
+        services.AddSingleton<ISqliteInitializer, SqliteInitializer>();
         services.AddScoped<IProdutoRepository, ProdutoRepository>();
         services.AddScoped<ISimulacaoRepository, SimulacaoRepository>();
 
