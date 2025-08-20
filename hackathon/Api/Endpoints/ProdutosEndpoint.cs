@@ -7,7 +7,7 @@ public static class ProdutosEndpoint
 {
     public static void MapProdutos(this WebApplication app)
     {
-        app.MapGet("/Volume", async ([FromQuery] DateOnly dataReferencia, IObterVolumeDiarioUseCase useCase) =>
+        app.MapGet("/produtos", async ([FromQuery] DateOnly dataReferencia, IObterVolumeDiarioUseCase useCase) =>
         {
             var resultado = await useCase.ExecutarAsync(dataReferencia);
             return Results.Ok(resultado);

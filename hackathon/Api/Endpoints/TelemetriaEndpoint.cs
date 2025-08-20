@@ -8,7 +8,7 @@ public static class TelemetriaEndpoint
 {
     public static void MapTelemetria(this WebApplication app)
     {
-        app.MapGet("/Telemetria", async (
+        app.MapGet("/telemetria", async (
             [FromQuery] DateTime dataReferencia,
             ITelemetriaService telemetriaService) =>
         {

@@ -74,10 +74,10 @@ hackathon/
 - **Taxas Personalizadas**: Taxas de juros específicas por produto
 
 ### API REST Completa
-- **POST `/Simulacao`**: Criação de simulações de empréstimo
-- **GET `/Simulacao`**: Listagem paginada de simulações realizadas
-- **GET `/Volume`**: Relatório de volume diário por produto
-- **GET `/Telemetria`**: Métricas de telemetria por data
+- **POST `/simulacoes`**: Criação de simulações de empréstimo
+- **GET `/simulacoes`**: Listagem paginada de simulações realizadas
+- **GET `/produtos`**: Relatório de volume diário por produto
+- **GET `/telemetria`**: Métricas de telemetria por data
 
 ### Sistema de Telemetria
 - **Monitoramento Automático**: Captura automática de métricas de todos os endpoints
@@ -100,7 +100,7 @@ hackathon/
 ## 🌐 Endpoints da API
 
 ### Simulações
-#### POST `/Simulacao`
+#### POST `/simulacoes`
 Cria uma nova simulação de empréstimo.
 
 **Request:**
@@ -129,7 +129,7 @@ Cria uma nova simulação de empréstimo.
 }
 ```
 
-#### GET `/Simulacao`
+#### GET `/simulacoes`
 Lista simulações realizadas com paginação.
 
 **Query Parameters:**
@@ -154,7 +154,7 @@ Lista simulações realizadas com paginação.
 ```
 
 ### Produtos e Volume
-#### GET `/Volume`
+#### GET `/produtos`
 Obtém relatório de volume diário por produto.
 
 **Query Parameters:**
@@ -178,7 +178,7 @@ Obtém relatório de volume diário por produto.
 ```
 
 ### Telemetria
-#### GET `/Telemetria`
+#### GET `/telemetria`
 Obtém métricas de telemetria para uma data específica.
 
 **Query Parameters:**
@@ -263,10 +263,10 @@ O projeto inclui um arquivo `hackathon.http` com exemplos de todas as requisiç�
 ### Monitoramento de Performance
 ```bash
 # Ver métricas do dia atual
-GET /Telemetria
+GET /telemetria
 
 # Ver métricas de uma data específica
-GET /Telemetria?dataReferencia=2025-01-27
+GET /telemetria?dataReferencia=2025-01-27
 ```
 
 ## 🤝 Contribuição

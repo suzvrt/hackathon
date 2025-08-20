@@ -26,7 +26,7 @@ public class TelemetriaMiddleware
         finally
         {
             cronometro.Stop();
-            
+
             // Registrar dados de telemetria de forma assíncrona para evitar bloqueio
             _ = Task.Run(() =>
             {
@@ -35,7 +35,7 @@ public class TelemetriaMiddleware
                     var nomeEndpoint = GetEndpointName(context);
                     var duracao = cronometro.Elapsed;
                     var sucesso = context.Response.StatusCode >= 200 && context.Response.StatusCode < 300;
-                    
+
                     _telemetriaService.RegistrarRequisicao(nomeEndpoint, duracao, sucesso);
                 }
                 catch
@@ -48,24 +48,17 @@ public class TelemetriaMiddleware
 
     private static string GetEndpointName(HttpContext context)
     {
+        var method = context.Request.Method;
         var endpoint = context.GetEndpoint();
-        if (endpoint?.DisplayName != null)
-        {
-            // Extrair nome significativo do endpoint
-            var displayName = endpoint.DisplayName;
-            if (displayName.Contains("ObterSimulacoes"))
-                return "ObterSimulacoes";
-            if (displayName.Contains("SimularEmprestimo"))
-                return "SimularEmprestimo";
-            if (displayName.Contains("ObterVolumeDiario"))
-                return "ObterVolumeDiario";
-            if (displayName.Contains("Telemetria"))
-                return "ObterTelemetria";
-        }
 
-        // Fallback para padrão de rota
-        var route = context.Request.Path.Value?.TrimStart('/') ?? "Desconhecido";
-        return string.IsNullOrEmpty(route) ? "Raiz" : route;
+        var routePattern = endpoint is RouteEndpoint routeEndpoint
+            ? routeEndpoint.RoutePattern.RawText
+            : context.Request.Path.Value;
+
+        // Normaliza rota
+        var route = string.IsNullOrEmpty(routePattern) ? "/" : routePattern.StartsWith("/") ? routePattern : "/" + routePattern;
+
+        return $"{method} {route}";
     }
 }
 

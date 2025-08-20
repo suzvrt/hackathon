@@ -46,7 +46,7 @@ CREATE TABLE Telemetria (
 
 ## Endpoints da API
 
-### GET /Telemetria
+### GET /telemetria
 Retorna dados de telemetria para uma data específica (padrão: hoje).
 
 **Parâmetros de Consulta:**
@@ -58,7 +58,7 @@ Retorna dados de telemetria para uma data específica (padrão: hoje).
     "dataReferencia": "2025-01-27",
     "listaEndpoints": [
         {
-            "nomeApi": "Simulacao",
+            "nomeApi": "simulacoes",
             "qtdRequisicoes": 135,
             "tempoMedio": 150,
             "tempoMinimo": 23,
@@ -69,7 +69,7 @@ Retorna dados de telemetria para uma data específica (padrão: hoje).
 }
 ```
 
-### GET /Telemetria/Range
+### GET /telemetria/Range
 Retorna dados de telemetria para um intervalo de datas.
 
 **Parâmetros de Consulta:**
@@ -125,15 +125,15 @@ Retorna dados de telemetria para um intervalo de datas.
 ## Exemplos de Uso
 
 ### Testando Coleta de Telemetria
-1. Faça requisições para qualquer endpoint (ex: `/Simulacao`, `/Produtos`)
+1. Faça requisições para qualquer endpoint (ex: `/simulacoes`, `/Produtos`)
 2. Aguarde até 5 minutos para os dados serem descarregados
-3. Consulte `/Telemetria` para ver as métricas coletadas
+3. Consulte `/telemetria` para ver as métricas coletadas
 
 ### Teste de Performance
 ```bash
 # Gerar carga para teste de telemetria
 for i in {1..100}; do
-  curl -X POST "http://localhost:5000/Simulacao" \
+  curl -X POST "http://localhost:5000/simulacoes" \
        -H "Content-Type: application/json" \
        -d '{"valorDesejado": "900.00", "prazo": "5"}'
 done

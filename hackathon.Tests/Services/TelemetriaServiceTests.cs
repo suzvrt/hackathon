@@ -30,14 +30,14 @@ public class TelemetriaServiceTests
         var service = new TelemetriaService(repo);
 
         // Act
-        service.RegistrarRequisicao("GET /Simulacao", TimeSpan.FromMilliseconds(100), true);
-        service.RegistrarRequisicao("GET /Simulacao", TimeSpan.FromMilliseconds(200), false);
+        service.RegistrarRequisicao("GET simulacoes", TimeSpan.FromMilliseconds(100), true);
+        service.RegistrarRequisicao("GET simulacoes", TimeSpan.FromMilliseconds(200), false);
         await service.ObterTelemetriaAsync(DateTime.Today); // força flush
 
         // Assert
         Assert.Single(repo.Persistidos);
         var record = repo.Persistidos[0];
-        Assert.Equal("GET /Simulacao", record.NomeApi);
+        Assert.Equal("GET simulacoes", record.NomeApi);
         Assert.Equal(2, record.QtdRequisicoes);
         Assert.Equal(150, record.TempoMedio);
         Assert.Equal(100, record.TempoMinimo);
@@ -54,7 +54,7 @@ public class TelemetriaServiceTests
         repo.Persistidos.Add(new TelemetriaRecord
         {
             DataReferencia = hoje,
-            NomeApi = "POST /Simulacao",
+            NomeApi = "POST simulacoes",
             QtdRequisicoes = 10,
             TempoMedio = 120,
             TempoMinimo = 100,
@@ -72,7 +72,7 @@ public class TelemetriaServiceTests
         Assert.Equal(hoje.ToString("yyyy-MM-dd"), response.DataReferencia);
         Assert.Single(response.ListaEndpoints);
         var endpoint = response.ListaEndpoints[0];
-        Assert.Equal("POST /Simulacao", endpoint.NomeApi);
+        Assert.Equal("POST simulacoes", endpoint.NomeApi);
         Assert.Equal(10, endpoint.QtdRequisicoes);
         Assert.Equal(120, endpoint.TempoMedio);
         Assert.Equal(100, endpoint.TempoMinimo);
