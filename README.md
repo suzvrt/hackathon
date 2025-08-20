@@ -18,11 +18,11 @@ Este projeto é uma API de simulação de empréstimos desenvolvida em .NET 8 co
 - **Background Services**: Serviços em background para persistência de dados
 - **Escalabilidade**: Permite processar múltiplas simulações simultaneamente
 
-### Sistema de Telemetria Avançado
+### Sistema de Telemetria
 - **Monitoramento Automático**: Middleware que captura métricas de todos os endpoints
 - **Métricas em Tempo Real**: Contagem de requisições, tempo de resposta e taxa de sucesso
 - **Persistência Inteligente**: Dados são descarregados a cada 5 minutos para otimizar memória
-- **Análise Histórica**: Consultas por data específica ou intervalo de datas
+- **Análise Histórica**: Consultas por data
 
 ### Arquitetura Limpa
 - **Domain-Driven Design**: Separação clara entre domínio, aplicação e infraestrutura
@@ -35,24 +35,24 @@ Este projeto é uma API de simulação de empréstimos desenvolvida em .NET 8 co
 ```
 hackathon/
 ├── Api/                    # Camada de apresentação
-│   ├── Endpoints/         # Endpoints da API
-│   ├── Extensions/        # Configurações e extensões
-│   ├── Middleware/        # Middleware de telemetria
-│   └── Serialization/     # Configurações de serialização JSON
-├── Application/           # Camada de aplicação
-│   ├── Dtos/              # Objetos de transferência de dados
-│   ├── Interfaces/       # Contratos e interfaces
-│   └── UseCases/         # Casos de uso da aplicação
-├── Domain/               # Camada de domínio
-│   ├── Entities/         # Entidades do domínio
-│   └── ValueObjects/     # Objetos de valor
-├── Infrastructure/       # Camada de infraestrutura
+│   ├── Endpoints/          # Endpoints da API
+│   ├── Extensions/         # Configurações e extensões
+│   ├── Middleware/         # Middleware de telemetria
+│   └── Serialization/      # Configurações de serialização JSON
+├── Application/            # Camada de aplicação
+│   ├── Dtos/               # Objetos de transferência de dados
+│   ├── Interfaces/         # Contratos e interfaces
+│   └── UseCases/           # Casos de uso da aplicação
+├── Domain/                 # Camada de domínio
+│   ├── Entities/           # Entidades do domínio
+│   └── ValueObjects/       # Objetos de valor
+├── Infrastructure/         # Camada de infraestrutura
 │   ├── BackgroundServices/ # Serviços em background
-│   ├── Config/           # Configurações
-│   ├── Events/           # Publicação de eventos
-│   ├── Persistence/      # Repositórios e acesso a dados
-│   └── Services/         # Serviços de infraestrutura
-└── banco/                # Scripts de banco de dados
+│   ├── Config/             # Configurações
+│   ├── Events/             # Publicação de eventos
+│   ├── Persistence/        # Repositórios e acesso a dados
+│   └── Services/           # Serviços de infraestrutura
+└── banco/                  # Scripts de banco de dados
 ```
 
 ## 🔧 Tecnologias Utilizadas
@@ -78,7 +78,6 @@ hackathon/
 - **GET `/Simulacao`**: Listagem paginada de simulações realizadas
 - **GET `/Volume`**: Relatório de volume diário por produto
 - **GET `/Telemetria`**: Métricas de telemetria por data
-- **GET `/Telemetria/Range`**: Métricas de telemetria por intervalo de datas
 
 ### Sistema de Telemetria
 - **Monitoramento Automático**: Captura automática de métricas de todos os endpoints
@@ -202,27 +201,6 @@ Obtém métricas de telemetria para uma data específica.
 }
 ```
 
-#### GET `/Telemetria/Range`
-Obtém métricas de telemetria para um intervalo de datas.
-
-**Query Parameters:**
-- `inicio` (obrigatório): Data de início no formato YYYY-MM-DD
-- `fim` (obrigatório): Data de fim no formato YYYY-MM-DD
-
-**Response:**
-```json
-[
-  {
-    "dataReferencia": "2025-01-27",
-    "listaEndpoints": [...]
-  },
-  {
-    "dataReferencia": "2025-01-26",
-    "listaEndpoints": [...]
-  }
-]
-```
-
 ## 🚀 Como Executar
 
 ### Pré-requisitos
@@ -275,7 +253,6 @@ docker-compose up --build
 - **Monitoramento Automático**: Middleware captura métricas de todos os endpoints
 - **Métricas em Tempo Real**: Contagem de requisições, tempo de resposta e taxa de sucesso
 - **Persistência Inteligente**: Dados são descarregados a cada 5 minutos para otimizar memória
-- **Análise Histórica**: Consultas por data específica ou intervalo de datas
 - **Performance**: Não impacta a performance da aplicação principal
 
 ## 📝 Exemplos de Uso
@@ -290,9 +267,6 @@ GET /Telemetria
 
 # Ver métricas de uma data específica
 GET /Telemetria?dataReferencia=2025-01-27
-
-# Ver métricas de um período
-GET /Telemetria/Range?inicio=2025-01-01&fim=2025-01-31
 ```
 
 ## 🤝 Contribuição

@@ -53,12 +53,14 @@ public class TelemetriaMiddleware
         {
             // Extrair nome significativo do endpoint
             var displayName = endpoint.DisplayName;
-            if (displayName.Contains("Simulacao"))
-                return "Simulacao";
-            if (displayName.Contains("Produtos"))
-                return "Produtos";
+            if (displayName.Contains("ObterSimulacoes"))
+                return "ObterSimulacoes";
+            if (displayName.Contains("SimularEmprestimo"))
+                return "SimularEmprestimo";
+            if (displayName.Contains("ObterVolumeDiario"))
+                return "ObterVolumeDiario";
             if (displayName.Contains("Telemetria"))
-                return "Telemetria";
+                return "ObterTelemetria";
         }
 
         // Fallback para padrão de rota

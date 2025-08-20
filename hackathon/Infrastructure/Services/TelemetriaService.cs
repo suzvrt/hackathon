@@ -3,6 +3,7 @@ using hackathon.Domain.Entities;
 using hackathon.Application.Dtos;
 using hackathon.Infrastructure.Persistence;
 using System.Collections.Concurrent;
+using System.Globalization;
 
 namespace hackathon.Infrastructure.Services;
 
@@ -52,9 +53,11 @@ public class TelemetriaService : ITelemetriaService, IDisposable
         
         var registros = await _repository.ObterTelemetriaPorDataAsync(dataReferencia);
         
+        var dataFormatada = dataReferencia.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+
         return new TelemetriaResponse
         {
-            DataReferencia = dataReferencia,
+            DataReferencia = dataFormatada,
             ListaEndpoints = registros.Select(r => new EndpointTelemetria
             {
                 NomeApi = r.NomeApi,

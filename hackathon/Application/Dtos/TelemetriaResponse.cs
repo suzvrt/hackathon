@@ -2,7 +2,7 @@ namespace hackathon.Application.Dtos;
 
 public class TelemetriaResponse
 {
-    public DateTime DataReferencia { get; set; }
+    public string DataReferencia { get; set; } = "";
     public List<EndpointTelemetria> ListaEndpoints { get; set; } = new();
 }
 

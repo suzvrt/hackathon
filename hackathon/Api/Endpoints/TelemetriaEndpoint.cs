@@ -15,6 +15,6 @@ public static class TelemetriaEndpoint
             var data = dataReferencia == default ? DateTime.Today : dataReferencia;
             var resultado = await telemetriaService.ObterTelemetriaAsync(data);
             return Results.Ok(resultado);
-        }).WithName("ObterTelemetria");
+        }).WithDisplayName("ObterTelemetria");
     }
 }

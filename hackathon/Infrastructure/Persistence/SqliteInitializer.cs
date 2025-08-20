@@ -76,7 +76,6 @@ public class SqliteInitializer : ISqliteInitializer
         var createTelemetriaIndexes = """
             CREATE INDEX IF NOT EXISTS IX_Telemetria_DataReferencia ON Telemetria(DataReferencia);
             CREATE INDEX IF NOT EXISTS IX_Telemetria_NomeApi ON Telemetria(NomeApi);
-            CREATE INDEX IF NOT EXISTS IX_Telemetria_DataReferencia_NomeApi ON Telemetria(DataReferencia, NomeApi);
             CREATE UNIQUE INDEX IF NOT EXISTS UX_Telemetria_NomeApi_DataReferencia ON Telemetria (NomeApi, DataReferencia);
             """;
 

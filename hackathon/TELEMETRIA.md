@@ -42,8 +42,7 @@ CREATE TABLE Telemetria (
 
 ### Índices para Performance
 - `IX_Telemetria_DataReferencia` - Consultas rápidas por data
-- `IX_Telemetria_NomeApi` - Consultas rápidas por endpoint  
-- `IX_Telemetria_DataReferencia_NomeApi` - Índice composto para consultas por intervalo
+- `IX_Telemetria_NomeApi` - Consultas rápidas por endpoint
 
 ## Endpoints da API
 
@@ -136,7 +135,7 @@ Retorna dados de telemetria para um intervalo de datas.
 for i in {1..100}; do
   curl -X POST "http://localhost:5000/Simulacao" \
        -H "Content-Type: application/json" \
-       -d '{"valorDesejado": 10000, "codigoProduto": 1}'
+       -d '{"valorDesejado": "900.00", "prazo": "5"}'
 done
 ```
 

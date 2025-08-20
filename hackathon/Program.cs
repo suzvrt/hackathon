@@ -3,6 +3,7 @@ using hackathon.Api.Extensions;
 using hackathon.Api.Serialization;
 using hackathon.Infrastructure.Persistence;
 using hackathon.Api.Middleware;
+using Dapper;
 
 var builder = WebApplication.CreateSlimBuilder(args);
 
@@ -16,11 +17,15 @@ builder.Services.ConfigureHttpJsonOptions(options =>
 
 var app = builder.Build();
 
-// Inicializar banco de dados SQLite
+// Inicializar banco de dados SQLite e warm-up do SqlServer
 using (var scope = app.Services.CreateScope())
 {
     var sqliteInitializer = scope.ServiceProvider.GetRequiredService<ISqliteInitializer>();
     await sqliteInitializer.InitializeAsync();
+
+    var hybridFactory = scope.ServiceProvider.GetRequiredService<IHybridConnectionFactory>();
+    using var conn = hybridFactory.CreateConnection(DatabaseType.SqlServer);
+    await conn.ExecuteAsync("SELECT 1");
 }
 
 // Mapeamento de endpoints
