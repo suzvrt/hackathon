@@ -16,5 +16,6 @@ var app = builder.Build();
 
 // Mapeamento de endpoints
 app.MapSimulacoes();
+app.MapProdutos();
 
 app.Run();

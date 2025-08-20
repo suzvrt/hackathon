@@ -1,4 +1,3 @@
-# Multi-stage build para .NET 8 Native AOT
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 
 # Configuração do ambiente de build
@@ -15,7 +14,6 @@ WORKDIR /app
 
 # Cópia dos arquivos de projeto
 COPY hackathon.csproj ./
-COPY Directory.Build.props ./
 
 # Restauração das dependências
 RUN dotnet restore
@@ -35,25 +33,12 @@ RUN dotnet publish -c Release \
     -o out
 
 # Imagem de runtime otimizada
-FROM mcr.microsoft.com/dotnet/runtime-deps:8.0-jammy-chiseled
+FROM mcr.microsoft.com/dotnet/runtime-deps:8.0-jammy
 
-# Configuração do usuário não-root para segurança
-RUN groupadd -r appuser && useradd -r -g appuser appuser
-
-# Instalação de dependências de runtime
-RUN apt-get update && apt-get install -y \
-    ca-certificates \
-    && rm -rf /var/lib/apt/lists/*
-
-# Configuração do diretório de trabalho
 WORKDIR /app
 
 # Cópia dos arquivos publicados
 COPY --from=build /app/out .
-
-# Configuração de permissões
-RUN chown -R appuser:appuser /app
-USER appuser
 
 # Configuração de variáveis de ambiente
 ENV ASPNETCORE_URLS=http://+:8080

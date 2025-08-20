@@ -5,7 +5,7 @@ using hackathon.Domain.ValueObjects;
 
 namespace hackathon.Application.UseCases;
 
-public class SimularEmprestimoUseCase
+public class SimularEmprestimoUseCase : ISimularEmprestimoUseCase
 {
     private readonly IProdutoRepository _produtoRepository;
     private readonly ISimulacaoPersistenceService _persistenceService;
@@ -30,6 +30,7 @@ public class SimularEmprestimoUseCase
 
         var simulacao = new Simulacao
         {
+            ValorDesejado = request.ValorDesejado,
             CodigoProduto = produtoIdeal.Codigo,
             DescricaoProduto = produtoIdeal.Nome,
             TaxaJuros = produtoIdeal.TaxaJuros / 1.0000000000000000000000000000m,

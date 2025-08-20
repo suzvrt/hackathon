@@ -1,3 +1,7 @@
+using System.Text.Json.Serialization;
+
 namespace hackathon.Application.Dtos;
 
-public record ListarRequest(int Pagina, int QtdRegistrosPagina);
+public record ListarRequest(
+    [property: JsonPropertyName("pagina")] int Pagina = 1,
+    [property: JsonPropertyName("qtdRegistrosPagina")] int QtdRegistrosPagina = 200);

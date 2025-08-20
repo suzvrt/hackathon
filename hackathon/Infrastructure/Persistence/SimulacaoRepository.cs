@@ -23,10 +23,10 @@ public class SimulacaoRepository : ISimulacaoRepository
 
         var sql = """
             INSERT INTO dbo.Simulacao (
-                Id, CodigoProduto, DescricaoProduto, TaxaJuros, CriadoEm,
+                Id, ValorDesejado, CodigoProduto, DescricaoProduto, TaxaJuros, CriadoEm,
                 SimulacaoSac, SimulacaoPrice
             ) VALUES (
-                @Id, @CodigoProduto, @DescricaoProduto, @TaxaJuros, @CriadoEm,
+                @Id, @ValorDesejado, @CodigoProduto, @DescricaoProduto, @TaxaJuros, @CriadoEm,
                 @SimulacaoSac, @SimulacaoPrice
             )
             """;
@@ -34,6 +34,7 @@ public class SimulacaoRepository : ISimulacaoRepository
         var parameters = new Dictionary<string, object>
         {
             { "Id", simulacao.Id },
+            { "ValorDesejado", simulacao.ValorDesejado },
             { "CodigoProduto", simulacao.CodigoProduto },
             { "DescricaoProduto", simulacao.DescricaoProduto },
             { "TaxaJuros", simulacao.TaxaJuros },
@@ -45,42 +46,54 @@ public class SimulacaoRepository : ISimulacaoRepository
         await connection.ExecuteAsync(sql, parameters);
     }
 
-    public async Task<PaginacaoResultado<SimulacaoResumo>> ObterPaginadoAsync(int pagina, int qtdPorPagina)
+    public async Task<PaginacaoResultado<SimulacaoResumo>> ObterPaginadoAsync(int pagina, int qtdRegistrosPagina)
     {
         using var connection = _connectionFactory.CreateConnection();
 
-        var offset = (pagina - 1) * qtdPorPagina;
+        var offset = (pagina - 1) * qtdRegistrosPagina;
 
-        var sql = """
-            SELECT COUNT(*) FROM dbo.Simulacao;
-            SELECT Id, SimulacaoPrice
-            FROM dbo.Simulacao
-            ORDER BY CriadoEm DESC
-            OFFSET @Offset ROWS FETCH NEXT @QtdPorPagina ROWS ONLY;
-        """;
+        var countSql = "SELECT COUNT(*) FROM dbo.Simulacao;";
+        var dataSql = """
+                  SELECT Id, SimulacaoPrice, ValorDesejado
+                  FROM dbo.Simulacao
+                  ORDER BY CriadoEm DESC
+                  OFFSET @Offset ROWS FETCH NEXT @QtdRegistrosPagina ROWS ONLY;
+                  """;
 
         var parameters = new DynamicParameters();
         parameters.Add("Offset", offset);
-        parameters.Add("QtdPorPagina", qtdPorPagina);
+        parameters.Add("QtdRegistrosPagina", qtdRegistrosPagina);
 
-        var command = new CommandDefinition(sql, parameters);
+        var totalRegistros = await connection.ExecuteScalarAsync<int>(countSql, parameters);
 
-        using var multi = await connection.QueryMultipleAsync(command);
+        if (totalRegistros == 0)
+        {
+            return new PaginacaoResultado<SimulacaoResumo>
+            {
+                Pagina = pagina,
+                QtdRegistros = 0,
+                QtdRegistrosPagina = qtdRegistrosPagina,
+                Registros = new List<SimulacaoResumo>()
+            };
+        }
 
-        var totalRegistros = await multi.ReadSingleAsync<int>();
-        var registrosBrutos = await multi.ReadAsync<(Guid Id, string SimulacaoPrice)>();
+        var registrosBrutos = await connection.QueryAsync(dataSql, parameters);
 
         var registros = registrosBrutos
-            .Select(r =>
+            .Select(row =>
             {
-                var parcelas = JsonSerializer.Deserialize<List<Parcela>>(r.SimulacaoPrice, AppJsonSerializerContext.Default.ListParcela);
+                var id = ((Guid)row.Id).GetHashCode();
+                var simulacaoPrice = (string)row.SimulacaoPrice;
+                var valorDesejado = (decimal?)row.ValorDesejado ?? 0m;;
+
+                var parcelas = JsonSerializer.Deserialize(simulacaoPrice, AppJsonSerializerContext.Default.ListParcela);
                 if (parcelas is null || parcelas.Count == 0)
                     return null;
 
                 return new SimulacaoResumo
                 {
-                    IdSimulacao = r.Id,
-                    ValorDesejado = decimal.Round(parcelas.Sum(p => p.ValorPrestacao), 2),
+                    IdSimulacao = id,
+                    ValorDesejado = decimal.Round(valorDesejado, 2),
                     Prazo = parcelas.Count,
                     ValorTotalParcelas = decimal.Round(parcelas.Sum(p => p.ValorPrestacao), 2)
                 };
@@ -92,8 +105,8 @@ public class SimulacaoRepository : ISimulacaoRepository
         {
             Pagina = pagina,
             QtdRegistros = totalRegistros,
-            QtdRegistrosPagina = qtdPorPagina,
-            Registros = registros
+            QtdRegistrosPagina = qtdRegistrosPagina,
+            Registros = registros!
         };
     }
 }

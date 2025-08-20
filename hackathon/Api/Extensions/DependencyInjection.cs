@@ -37,7 +37,8 @@ public static class DependencyInjection
         services.AddScoped<ISimulacaoPersistenceService>(sp =>
             sp.GetRequiredService<SimulacaoPersistenceService>());
 
-        services.AddScoped<SimularEmprestimoUseCase>();
+        services.AddScoped<ISimularEmprestimoUseCase, SimularEmprestimoUseCase>();
         services.AddScoped<IObterSimulacoesUseCase, ObterSimulacoesUseCase>();
+        services.AddScoped<IObterVolumeDiarioUseCase, ObterVolumeDiarioUseCase>();
     }
 }

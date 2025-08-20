@@ -7,6 +7,7 @@ public class Simulacao
     public Guid Id { get; init; } = Guid.NewGuid();
     public int CodigoProduto { get; init; }
     public string DescricaoProduto { get; init; } = string.Empty;
+    public decimal ValorDesejado { get; init; }
     public decimal TaxaJuros { get; init; }
     public DateTime CriadoEm { get; init; } = DateTime.UtcNow;
 

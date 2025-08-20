@@ -6,7 +6,8 @@ NU_MINIMO_MESES smallint NOT NULL,
 NU_MAXIMO_MESES smallint NULL,
 VR_MINIMO numeric(18, 2) NOT NULL,
 VR_MAXIMO numeric(18, 2) NULL
-);
+)
+GO
 
 INSERT INTO dbo.PRODUTO (CO_PRODUTO, NO_PRODUTO, PC_TAXA_JUROS,
 NU_MINIMO_MESES, NU_MAXIMO_MESES, VR_MINIMO, VR_MAXIMO)
@@ -26,6 +27,7 @@ VALUES (4, 'Produto 4', 0.015100000, 96, null, 1000000.01, null)
 
 CREATE TABLE dbo.Simulacao (
     Id uniqueidentifier PRIMARY KEY,
+    ValorDesejado decimal(18,2) NOT NULL,
     CodigoProduto int NOT NULL,
     DescricaoProduto nvarchar(100) NOT NULL,
     TaxaJuros decimal(18,9) NOT NULL,
