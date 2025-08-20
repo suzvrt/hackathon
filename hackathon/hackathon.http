@@ -1,6 +1,21 @@
 @hackathon_HostAddress = http://localhost:5296
 
-POST {{hackathon_HostAddress}}/simulacoes/
+POST {{hackathon_HostAddress}}/Simulacao/
+Accept: application/json
+
+{
+    "valorDesejado":"900.00",
+    "prazo":"5"
+}
+
+###
+
+GET {{hackathon_HostAddress}}/Simulacao?pagina=1&qtdRegistrosPagina=200
+Accept: application/json
+
+###
+
+GET {{hackathon_HostAddress}}/Volume?dataReferencia=2025-08-20
 Accept: application/json
 
 ###

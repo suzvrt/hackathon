@@ -1,6 +1,5 @@
 using hackathon.Application.Dtos;
 using hackathon.Application.Interfaces;
-using hackathon.Application.UseCases;
 
 namespace hackathon.Api.Endpoints;
 
