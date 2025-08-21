@@ -129,6 +129,9 @@ docker-compose logs db
 
 # Verificar se a porta 1433 está livre
 netstat -an | findstr 1433
+
+# Nota: O healthcheck foi corrigido com parâmetro -C para confiar no certificado
+# Se persistir, verifique se o container tem recursos suficientes (mínimo 4GB RAM)
 ```
 
 #### 3. Aplicação não conecta ao banco

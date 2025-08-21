@@ -11,7 +11,7 @@ public class ObterVolumeDiarioUseCaseTests
         public Task<IEnumerable<Produto>> ObterProdutosCompativeisAsync(decimal valor, int prazo)
             => throw new NotImplementedException();
 
-        public Task<VolumeSimuladoDiario> ObterVolumeSimuladoPorDiaAsync(DateOnly dataReferencia)
+        public Task<VolumeSimuladoDiario> ObterVolumeSimuladoPorDiaAsync(DateOnly dataReferencia, string? sistema)
         {
             var resultado = new VolumeSimuladoDiario
             {
@@ -50,9 +50,10 @@ public class ObterVolumeDiarioUseCaseTests
         var repository = new ProdutoRepositoryFake();
         var useCase = new ObterVolumeDiarioUseCase(repository);
         var dataReferencia = new DateOnly(2025, 8, 20);
+        var sistema = "PRICE";
 
         // Act
-        var resultado = await useCase.ExecutarAsync(dataReferencia);
+        var resultado = await useCase.ExecutarAsync(dataReferencia, sistema);
 
         // Assert
         Assert.NotNull(resultado);

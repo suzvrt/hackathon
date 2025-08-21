@@ -1,29 +1,31 @@
 using Microsoft.Data.Sqlite;
 using hackathon.Domain.Entities;
-using hackathon.Infrastructure.Config;
 using hackathon.Application.Interfaces;
+using Dapper;
 
 namespace hackathon.Infrastructure.Persistence;
 
+[DapperAot]
 public class TelemetriaRepository : ITelemetriaRepository
 {
-    private readonly SqliteSettings _settings;
+    private readonly HybridConnectionFactory _connectionFactory;
 
-    public TelemetriaRepository(SqliteSettings settings)
+    public TelemetriaRepository(HybridConnectionFactory connectionFactory)
     {
-        _settings = settings;
+        _connectionFactory = connectionFactory;
     }
 
+    [DapperAot]
     public async Task SalvarTelemetriaAsync(List<TelemetriaRecord> registros)
     {
         if (!registros.Any()) return;
 
-        using var connection = new SqliteConnection(_settings.ConnectionString);
-        await connection.OpenAsync();
+        // MUDANÇA 3: A conexão é criada pela factory
+        using var connection = _connectionFactory.CreateConnection(DatabaseType.Sqlite);
+        await ((SqliteConnection)connection).OpenAsync();
 
-        // Usar transação para inserção em lote
-        using var transaction = await connection.BeginTransactionAsync();
-        
+        using var transaction = await ((SqliteConnection)connection).BeginTransactionAsync();
+
         try
         {
             var insertCommand = """
@@ -33,13 +35,13 @@ public class TelemetriaRepository : ITelemetriaRepository
                 ) VALUES (@Id, @DataReferencia, @NomeApi, @QtdRequisicoes, @TempoMedio, @TempoMinimo, @TempoMaximo, @PercentualSucesso, @CriadoEm)
                 """;
 
-            using var command = new SqliteCommand(insertCommand, connection, (SqliteTransaction)transaction);
-            
+            using var command = new SqliteCommand(insertCommand, (SqliteConnection)connection, (SqliteTransaction)transaction);
+
             foreach (var registro in registros)
             {
                 command.Parameters.Clear();
-                command.Parameters.AddRange(new SqliteParameter[]
-                {
+                command.Parameters.AddRange(
+                [
                     new("@Id", registro.Id),
                     new("@DataReferencia", registro.DataReferencia.ToString("yyyy-MM-dd")),
                     new("@NomeApi", registro.NomeApi),
@@ -49,8 +51,8 @@ public class TelemetriaRepository : ITelemetriaRepository
                     new("@TempoMaximo", registro.TempoMaximo),
                     new("@PercentualSucesso", registro.PercentualSucesso),
                     new("@CriadoEm", registro.CriadoEm.ToString("yyyy-MM-dd HH:mm:ss"))
-                });
-                
+                ]);
+
                 await command.ExecuteNonQueryAsync();
             }
 
@@ -63,25 +65,26 @@ public class TelemetriaRepository : ITelemetriaRepository
         }
     }
 
+    [DapperAot]
     public async Task<List<TelemetriaRecord>> ObterTelemetriaPorDataAsync(DateTime dataReferencia)
     {
-        using var connection = new SqliteConnection(_settings.ConnectionString);
-        await connection.OpenAsync();
+        using var connection = _connectionFactory.CreateConnection(DatabaseType.Sqlite);
 
         var query = """
             SELECT Id, DataReferencia, NomeApi, QtdRequisicoes, TempoMedio, 
-                TempoMinimo, TempoMaximo, PercentualSucesso, CriadoEm
+                   TempoMinimo, TempoMaximo, PercentualSucesso, CriadoEm
             FROM Telemetria 
             WHERE date(DataReferencia) = date(@DataReferencia)
             ORDER BY NomeApi
             """;
 
-        using var command = new SqliteCommand(query, connection);
+        using var command = new SqliteCommand(query, (SqliteConnection)connection);
         command.Parameters.Add(new SqliteParameter("@DataReferencia", dataReferencia.ToString("yyyy-MM-dd")));
+        await ((SqliteConnection)connection).OpenAsync();
 
         var registros = new List<TelemetriaRecord>();
         using var reader = await command.ExecuteReaderAsync();
-        
+
         while (await reader.ReadAsync())
         {
             registros.Add(new TelemetriaRecord

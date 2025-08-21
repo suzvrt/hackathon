@@ -15,7 +15,7 @@ Accept: application/json
 
 ###
 
-GET {{hackathon_HostAddress}}/produtos?dataReferencia=2025-08-20
+GET {{hackathon_HostAddress}}/produtos?dataReferencia=2025-08-20&sistema=PRICE
 Accept: application/json
 
 ###
@@ -36,4 +36,4 @@ Content-Type: application/json
 }
 
 ### Teste de Produtos (para gerar dados de telemetria)
-GET {{hackathon_HostAddress}}/Produtos
+GET {{hackathon_HostAddress}}/produtos?dataReferencia=2025-01-27&sistema=SAC

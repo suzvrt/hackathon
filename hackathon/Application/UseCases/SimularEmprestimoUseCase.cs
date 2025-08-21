@@ -1,3 +1,5 @@
+using System.Text.Json;
+using hackathon.Api.Serialization;
 using hackathon.Application.Dtos;
 using hackathon.Application.Interfaces;
 using hackathon.Domain.Entities;
@@ -9,13 +11,16 @@ public class SimularEmprestimoUseCase : ISimularEmprestimoUseCase
 {
     private readonly IProdutoRepository _produtoRepository;
     private readonly ISimulacaoPersistenceService _persistenceService;
+    private readonly IEventPublisher _eventPublisher;
 
     public SimularEmprestimoUseCase(
         IProdutoRepository produtoRepository,
-        ISimulacaoPersistenceService persistenceService)
+        ISimulacaoPersistenceService persistenceService,
+        IEventPublisher eventPublisher)
     {
         _produtoRepository = produtoRepository;
         _persistenceService = persistenceService;
+        _eventPublisher = eventPublisher;
     }
 
     public async Task<SimulacaoResponse?> ExecutarAsync(SimulacaoRequest request)
@@ -41,7 +46,7 @@ public class SimularEmprestimoUseCase : ISimularEmprestimoUseCase
         // Executar e esquecer (fire and forget)
         _ = _persistenceService.EnqueueAsync(simulacao);
 
-        return new SimulacaoResponse(
+        SimulacaoResponse response = new SimulacaoResponse(
             IdSimulacao: simulacao.Id.GetHashCode(),
             CodigoProduto: simulacao.CodigoProduto,
             DescricaoProduto: simulacao.DescricaoProduto,
@@ -49,6 +54,11 @@ public class SimularEmprestimoUseCase : ISimularEmprestimoUseCase
             Sac: new("SAC", simulacao.Sac.Select(p => p.ToDto()).ToList()),
             Price: new("PRICE", simulacao.Price.Select(p => p.ToDto()).ToList())
         );
+
+        // Publicar evento de simulação (fire and forget também)
+        _ = _eventPublisher.PublishAsync(JsonSerializer.Serialize(response, AppJsonSerializerContext.Default.SimulacaoResponse));
+
+        return response;
     }
 
     private List<Parcela> SimularSAC(decimal valor, int prazo, decimal taxa)

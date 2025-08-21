@@ -2,6 +2,7 @@ using System.Text.Json.Serialization;
 using hackathon.Application.Dtos;
 using hackathon.Domain.Entities;
 using hackathon.Domain.ValueObjects;
+using hackathon.Infrastructure.Persistence;
 
 namespace hackathon.Api.Serialization;
 

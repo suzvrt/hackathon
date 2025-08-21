@@ -38,7 +38,7 @@ public class SimularEmprestimoUseCaseTests
             return Task.FromResult(produtos.Where(p => p.EhCompativel(valor, prazo)));
         }
 
-        public Task<VolumeSimuladoDiario> ObterVolumeSimuladoPorDiaAsync(DateOnly dataReferencia)
+        public Task<VolumeSimuladoDiario> ObterVolumeSimuladoPorDiaAsync(DateOnly dataReferencia, string? sistema)
             => throw new NotImplementedException();
 
     }
@@ -54,13 +54,22 @@ public class SimularEmprestimoUseCaseTests
         }
     }
 
+    private class EventPublisherFake : IEventPublisher
+    {
+        public Task PublishAsync<T>(T message, CancellationToken cancellationToken = default)
+        {
+            return Task.CompletedTask;
+        }
+    }
+
     [Fact]
     public async Task ExecutarAsync_DeveRetornarSimulacaoResponse_QuandoProdutoCompativelExiste()
     {
         // Arrange
         var repo = new ProdutoRepositoryFake();
         var persistence = new SimulacaoPersistenceFake();
-        var useCase = new SimularEmprestimoUseCase(repo, persistence);
+        var eventPublisher = new EventPublisherFake();
+        var useCase = new SimularEmprestimoUseCase(repo, persistence, eventPublisher);
 
         var request = new SimulacaoRequest(10000, 12);
 
@@ -83,7 +92,8 @@ public class SimularEmprestimoUseCaseTests
         // Arrange
         var repo = new ProdutoRepositoryFake();
         var persistence = new SimulacaoPersistenceFake();
-        var useCase = new SimularEmprestimoUseCase(repo, persistence);
+        var eventPublisher = new EventPublisherFake();
+        var useCase = new SimularEmprestimoUseCase(repo, persistence, eventPublisher);
 
         var request = new SimulacaoRequest(999999, 99); // fora dos limites
 

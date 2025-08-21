@@ -159,6 +159,7 @@ Obtém relatório de volume diário por produto.
 
 **Query Parameters:**
 - `dataReferencia` (obrigatório): Data de referência no formato YYYY-MM-DD
+- `sistema` (opcional): Sistema de amortização (padrão: "PRICE")
 
 **Response:**
 ```json
@@ -240,6 +241,16 @@ docker-compose up --build
 - **Deploy Simples**: Binário único sem dependências
 - **Performance**: Execução nativa sem interpretação
 - **Segurança**: Menor superfície de ataque
+
+## 🤔 Por que usar Native AOT?
+
+**Performance Superior**: Aplicações compiladas nativamente executam mais rápido, sem overhead do runtime .NET.
+
+**Menor Consumo de Recursos**: Reduz significativamente o uso de memória e CPU, ideal para ambientes com recursos limitados.
+
+**Deploy Simplificado**: Um único arquivo executável sem dependências externas, facilitando distribuição e implantação.
+
+**Inicialização Instantânea**: Startup em milissegundos, perfeito para funções serverless e microserviços que precisam responder rapidamente.
 
 ## 🔄 Padrão Fire-and-Forget
 

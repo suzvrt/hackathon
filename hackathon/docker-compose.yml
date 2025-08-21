@@ -13,7 +13,7 @@ services:
       - EventHub__ConnectionString=Endpoint=sb://eventhack.servicebus.windows.net/;SharedAccessKeyName=hack;SharedAccessKey=HeHeVaVqyVkntO2FnjQcs2Ilh/4MUDo4y+AEhKp8z+g=;EntityPath=simulacoes
     depends_on:
       db:
-        condition: service_healthy # Agora vai funcionar, pois o db ficará saudável
+        condition: service_healthy # Garante que o serviço 'db' esteja saudável antes de iniciar
     networks:
       - hackathon-network
     restart: unless-stopped
@@ -26,7 +26,9 @@ services:
 
   # Serviço principal do Banco de Dados SQL Server
   db:
-    image: mcr.microsoft.com/mssql/server:2022-latest
+    build:
+      context: .
+      dockerfile: ../banco/db.Dockerfile # Aponta para o nosso novo arquivo
     environment:
       - ACCEPT_EULA=Y
       - SA_PASSWORD=Password23  # Considere usar secrets para senhas em produção
@@ -49,7 +51,9 @@ services:
 
   # Serviço para configurar o banco de dados (rodar o script init.sql)
   db-setup:
-    image: mcr.microsoft.com/mssql/server:2022-latest
+    build:
+      context: .
+      dockerfile: ../banco/db.Dockerfile # Aponta para o nosso novo arquivo
     depends_on:
       db:
         condition: service_healthy # Só inicia quando o healthcheck do 'db' passar

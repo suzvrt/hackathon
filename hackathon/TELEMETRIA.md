@@ -125,7 +125,7 @@ Retorna dados de telemetria para um intervalo de datas.
 ## Exemplos de Uso
 
 ### Testando Coleta de Telemetria
-1. Faça requisições para qualquer endpoint (ex: `/simulacoes`, `/Produtos`)
+1. Faça requisições para qualquer endpoint (ex: `/simulacoes`, `/produtos`)
 2. Aguarde até 5 minutos para os dados serem descarregados
 3. Consulte `/telemetria` para ver as métricas coletadas
 

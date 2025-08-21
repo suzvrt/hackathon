@@ -10,8 +10,8 @@ public sealed class ObterVolumeDiarioUseCase : IObterVolumeDiarioUseCase
         _repository = repository;
     }
 
-    public async Task<VolumeSimuladoDiario> ExecutarAsync(DateOnly dataReferencia)
+    public async Task<VolumeSimuladoDiario> ExecutarAsync(DateOnly dataReferencia, string? sistema)
     {
-        return await _repository.ObterVolumeSimuladoPorDiaAsync(dataReferencia);
+        return await _repository.ObterVolumeSimuladoPorDiaAsync(dataReferencia, sistema);
     }
 }

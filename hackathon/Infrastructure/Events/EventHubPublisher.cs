@@ -18,10 +18,19 @@ public class EventHubPublisher : IEventPublisher, IAsyncDisposable
 
     public async Task PublishAsync<T>(T message, CancellationToken cancellationToken = default)
     {
-        var eventData = new EventData(
-            JsonSerializer.SerializeToUtf8Bytes(message, AppJsonSerializerContext.Default.String)
-        );
-        await _producerClient.SendAsync(new[] { eventData }, cancellationToken);
+        try
+        {
+            var eventData = new EventData(
+                JsonSerializer.SerializeToUtf8Bytes(message, AppJsonSerializerContext.Default.String)
+            );
+            await _producerClient.SendAsync([eventData], cancellationToken);
+            Console.WriteLine($"Evento publicado com sucesso.");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Falha ao publicar evento: {ex.Message}");
+            throw;
+        }
     }
 
     public async ValueTask DisposeAsync()
