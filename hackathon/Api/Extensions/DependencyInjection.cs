@@ -1,3 +1,4 @@
+using System.Threading.Channels;
 using hackathon.Application.Interfaces;
 using hackathon.Application.UseCases;
 using hackathon.Infrastructure.BackgroundServices;
@@ -5,6 +6,7 @@ using hackathon.Infrastructure.Config;
 using hackathon.Infrastructure.Events;
 using hackathon.Infrastructure.Persistence;
 using hackathon.Infrastructure.Services;
+using hackathon.Infrastructure.Telemetry;
 
 namespace hackathon.Api.Extensions;
 
@@ -50,9 +52,18 @@ public static class DependencyInjection
         services.AddScoped<ISimularEmprestimoUseCase, SimularEmprestimoUseCase>();
         services.AddScoped<IObterSimulacoesUseCase, ObterSimulacoesUseCase>();
         services.AddScoped<IObterVolumeDiarioUseCase, ObterVolumeDiarioUseCase>();
-        
+
         // Serviços de telemetria
         services.AddSingleton<ITelemetriaRepository, TelemetriaRepository>();
+
+        // Canal singleton (SingleReader/MultipleWriters)
+        services.AddSingleton(Channel.CreateUnbounded<TelemetriaMessage>(
+            new UnboundedChannelOptions { SingleReader = true, SingleWriter = false }));
+
+        // Fachada que enfileira e o repositório já existente
         services.AddSingleton<ITelemetriaService, TelemetriaService>();
+
+        // Worker que agrega e persiste
+        services.AddHostedService<TelemetriaBackgroundService>();
     }
 }

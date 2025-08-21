@@ -18,73 +18,137 @@ public class TelemetriaRepository : ITelemetriaRepository
     [DapperAot]
     public async Task SalvarTelemetriaAsync(List<TelemetriaRecord> registros)
     {
-        if (!registros.Any()) return;
+        if (registros == null || registros.Count == 0) return;
 
-        // MUDANÇA 3: A conexão é criada pela factory
         using var connection = _connectionFactory.CreateConnection(DatabaseType.Sqlite);
-        await ((SqliteConnection)connection).OpenAsync();
+        var sqlite = (SqliteConnection)connection;
 
-        using var transaction = await ((SqliteConnection)connection).BeginTransactionAsync();
+        await sqlite.OpenAsync();
 
-        try
+        // Ajusta PRAGMAs
+        using (var pragmas = sqlite.CreateCommand())
         {
-            var insertCommand = """
-                INSERT OR REPLACE INTO Telemetria (
-                    Id, DataReferencia, NomeApi, QtdRequisicoes, TempoMedio, 
-                    TempoMinimo, TempoMaximo, PercentualSucesso, CriadoEm
-                ) VALUES (@Id, @DataReferencia, @NomeApi, @QtdRequisicoes, @TempoMedio, @TempoMinimo, @TempoMaximo, @PercentualSucesso, @CriadoEm)
-                """;
-
-            using var command = new SqliteCommand(insertCommand, (SqliteConnection)connection, (SqliteTransaction)transaction);
-
-            foreach (var registro in registros)
-            {
-                command.Parameters.Clear();
-                command.Parameters.AddRange(
-                [
-                    new("@Id", registro.Id),
-                    new("@DataReferencia", registro.DataReferencia.ToString("yyyy-MM-dd")),
-                    new("@NomeApi", registro.NomeApi),
-                    new("@QtdRequisicoes", registro.QtdRequisicoes),
-                    new("@TempoMedio", registro.TempoMedio),
-                    new("@TempoMinimo", registro.TempoMinimo),
-                    new("@TempoMaximo", registro.TempoMaximo),
-                    new("@PercentualSucesso", registro.PercentualSucesso),
-                    new("@CriadoEm", registro.CriadoEm.ToString("yyyy-MM-dd HH:mm:ss"))
-                ]);
-
-                await command.ExecuteNonQueryAsync();
-            }
-
-            await transaction.CommitAsync();
+            pragmas.CommandText = @"
+                PRAGMA journal_mode=WAL;
+                PRAGMA synchronous=NORMAL;
+                PRAGMA busy_timeout=5000;";
+            await pragmas.ExecuteNonQueryAsync();
         }
-        catch
+
+        // Inicia transação IMMEDIATE
+        using (var beginCmd = sqlite.CreateCommand())
         {
-            await transaction.RollbackAsync();
-            throw;
+            beginCmd.CommandText = "BEGIN IMMEDIATE;";
+            await beginCmd.ExecuteNonQueryAsync();
         }
+
+        // Agora cria a transação associada
+        using var tx = sqlite.BeginTransaction();
+
+
+        // Garante unicidade por (DataReferencia, NomeApi)
+        using (var idx = sqlite.CreateCommand())
+        {
+            idx.Transaction = (SqliteTransaction)tx;
+            idx.CommandText = @"
+                CREATE UNIQUE INDEX IF NOT EXISTS UX_Telemetria_Data_Nome
+                ON Telemetria (DataReferencia, NomeApi);";
+            await idx.ExecuteNonQueryAsync();
+        }
+
+        const string upsertSql = @"
+            INSERT INTO Telemetria (
+                Id, DataReferencia, NomeApi, QtdRequisicoes, TempoMedio,
+                TempoMinimo, TempoMaximo, PercentualSucesso, CriadoEm
+            ) VALUES (
+                @Id, @DataReferencia, @NomeApi, @QtdRequisicoes, @TempoMedio,
+                @TempoMinimo, @TempoMaximo, @PercentualSucesso, @CriadoEm
+            )
+            ON CONFLICT(DataReferencia, NomeApi) DO UPDATE SET
+                QtdRequisicoes = Telemetria.QtdRequisicoes + excluded.QtdRequisicoes,
+                TempoMinimo = CASE
+                    WHEN Telemetria.TempoMinimo = 0 THEN excluded.TempoMinimo
+                    ELSE MIN(Telemetria.TempoMinimo, excluded.TempoMinimo)
+                END,
+                TempoMaximo = MAX(Telemetria.TempoMaximo, excluded.TempoMaximo),
+                TempoMedio = CASE
+                    WHEN (Telemetria.QtdRequisicoes + excluded.QtdRequisicoes) > 0 THEN
+                        (Telemetria.TempoMedio * Telemetria.QtdRequisicoes
+                        + excluded.TempoMedio * excluded.QtdRequisicoes)
+                        / (Telemetria.QtdRequisicoes + excluded.QtdRequisicoes)
+                    ELSE 0
+                END,
+                PercentualSucesso = CASE
+                    WHEN (Telemetria.QtdRequisicoes + excluded.QtdRequisicoes) > 0 THEN
+                        (Telemetria.PercentualSucesso * Telemetria.QtdRequisicoes
+                        + excluded.PercentualSucesso * excluded.QtdRequisicoes)
+                        / (Telemetria.QtdRequisicoes + excluded.QtdRequisicoes)
+                    ELSE 0
+                END;";
+
+        using var cmd = sqlite.CreateCommand();
+        cmd.Transaction = (SqliteTransaction)tx;
+        cmd.CommandText = upsertSql;
+        cmd.CommandTimeout = 5;
+
+        // prepara parâmetros uma única vez (reutiliza no loop)
+        var pId = cmd.Parameters.Add("@Id", SqliteType.Text);
+        var pData = cmd.Parameters.Add("@DataReferencia", SqliteType.Text);
+        var pNome = cmd.Parameters.Add("@NomeApi", SqliteType.Text);
+        var pQtd = cmd.Parameters.Add("@QtdRequisicoes", SqliteType.Integer);
+        var pMedio = cmd.Parameters.Add("@TempoMedio", SqliteType.Integer);
+        var pMin = cmd.Parameters.Add("@TempoMinimo", SqliteType.Integer);
+        var pMax = cmd.Parameters.Add("@TempoMaximo", SqliteType.Integer);
+        var pPct = cmd.Parameters.Add("@PercentualSucesso", SqliteType.Real);
+        var pCriadoEm = cmd.Parameters.Add("@CriadoEm", SqliteType.Text);
+
+        foreach (var r in registros)
+        {
+            // Observação: o Id pode ser diferente a cada flush; no UPSERT,
+            // o conflito ocorre por (DataReferencia, NomeApi) e o UPDATE preserva o Id existente.
+            pId.Value = r.Id;
+            pData.Value = r.DataReferencia.ToString("yyyy-MM-dd");
+            pNome.Value = r.NomeApi;
+            pQtd.Value = r.QtdRequisicoes;
+            pMedio.Value = r.TempoMedio;
+            pMin.Value = r.TempoMinimo;
+            pMax.Value = r.TempoMaximo;
+            pPct.Value = (double)r.PercentualSucesso; // REAL em SQLite
+            pCriadoEm.Value = r.CriadoEm.ToString("yyyy-MM-dd HH:mm:ss");
+
+            await cmd.ExecuteNonQueryAsync();
+        }
+
+        await tx.CommitAsync();
     }
 
     [DapperAot]
     public async Task<List<TelemetriaRecord>> ObterTelemetriaPorDataAsync(DateTime dataReferencia)
     {
         using var connection = _connectionFactory.CreateConnection(DatabaseType.Sqlite);
+        var sqlite = (SqliteConnection)connection;
+        await sqlite.OpenAsync();
 
-        var query = """
-            SELECT Id, DataReferencia, NomeApi, QtdRequisicoes, TempoMedio, 
-                   TempoMinimo, TempoMaximo, PercentualSucesso, CriadoEm
-            FROM Telemetria 
+        using (var pragmas = sqlite.CreateCommand())
+        {
+            pragmas.CommandText = "PRAGMA busy_timeout=5000;";
+            await pragmas.ExecuteNonQueryAsync();
+        }
+
+        const string selectSql = @"
+            SELECT Id, DataReferencia, NomeApi, QtdRequisicoes, TempoMedio,
+                TempoMinimo, TempoMaximo, PercentualSucesso, CriadoEm
+            FROM Telemetria
             WHERE date(DataReferencia) = date(@DataReferencia)
-            ORDER BY NomeApi
-            """;
+            ORDER BY NomeApi;";
 
-        using var command = new SqliteCommand(query, (SqliteConnection)connection);
-        command.Parameters.Add(new SqliteParameter("@DataReferencia", dataReferencia.ToString("yyyy-MM-dd")));
-        await ((SqliteConnection)connection).OpenAsync();
+        using var cmd = sqlite.CreateCommand();
+        cmd.CommandText = selectSql;
+        cmd.CommandTimeout = 5;
+        cmd.Parameters.Add(new SqliteParameter("@DataReferencia", dataReferencia.ToString("yyyy-MM-dd")));
 
         var registros = new List<TelemetriaRecord>();
-        using var reader = await command.ExecuteReaderAsync();
-
+        using var reader = await cmd.ExecuteReaderAsync();
         while (await reader.ReadAsync())
         {
             registros.Add(new TelemetriaRecord

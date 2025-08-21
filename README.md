@@ -34,14 +34,22 @@ Este projeto é uma API de simulação de empréstimos desenvolvida em .NET 8 ut
 ### Sistema de Telemetria
 - **Monitoramento Automático**: Middleware que captura métricas de todos os endpoints
 - **Métricas em Tempo Real**: Contagem de requisições, tempo de resposta e taxa de sucesso
-- **Persistência Inteligente**: Dados são descarregados a cada 5 minutos para otimizar memória
 - **Análise Histórica**: Consultas por data
+- **Agregação via Channel**: Eventos de telemetria são enfileirados e processados por um único worker (evita concorrência).
+- **Flush Inteligente**: Persistência periódica (1 min) e sob demanda (antes de consultas).
+- **UPSERT Idempotente**: Métricas agregadas por dia/endpoint no SQLite, com retry para lidar com locks.
 
 ### Arquitetura Limpa
 - **Domain-Driven Design**: Separação clara entre domínio, aplicação e infraestrutura
 - **Use Cases**: Lógica de negócio encapsulada em casos de uso específicos
 - **Repository Pattern**: Abstração para acesso a dados
 - **Dependency Injection**: Injeção de dependências para baixo acoplamento
+
+### Resiliência e Tratamento de Erros
+- **Fire-and-Forget Seguro**: Uso de extensão `SafeFireAndForget` para logar falhas sem impactar a resposta.
+- **Background Services**: Persistência de simulações e telemetria via `System.Threading.Channels` + `BackgroundService`.
+- **Retry com Backoff**: Implementado para operações críticas no SQLite.
+- **ProblemDetails**: Erros críticos retornam respostas padronizadas (RFC 7807).
 
 ## 🏗️ Estrutura do Projeto
 
@@ -77,6 +85,7 @@ hackathon/
 - **Azure Event Hubs**: Mensageria para eventos
 - **SQL Server**: Banco de dados relacional principal
 - **Docker**: Containerização da aplicação
+> ⚠️ **Nota**: SQLite é usado apenas para telemetria e desenvolvimento local. Em produção, recomenda-se SQL Server ou outro banco relacional.
 
 ## 📊 Funcionalidades
 
@@ -219,6 +228,9 @@ Obtém métricas de telemetria para uma data específica.
 
 ### Pré-requisitos
 - .NET 8 SDK
+- Visual Studio 2022 Build Tools com:
+  - Workload: Desktop development with C++
+  - Windows 10/11 SDK
 - SQL Server (para produção)
 - SQLite (para desenvolvimento local)
 - Docker (opcional)
@@ -260,6 +272,13 @@ GET /telemetria
 # Ver métricas de uma data específica
 GET /telemetria?dataReferencia=2025-01-27
 ```
+
+### Boas Práticas Implementadas
+- **Clean Architecture**: Separação clara entre camadas (Domain, Application, Infrastructure, API).
+- **Use Cases**: Lógica de negócio isolada.
+- **Repository Pattern**: Abstração para persistência.
+- **Dependency Injection**: Baixo acoplamento.
+- **Native AOT Ready**: Uso de `System.Text.Json` com Source Generators e eliminação de reflection.
 
 ## 🤝 Contribuição
 

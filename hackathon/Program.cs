@@ -17,6 +17,18 @@ builder.Services.ConfigureHttpJsonOptions(options =>
 
 var app = builder.Build();
 
+// Handler global de exceções => ProblemDetails genérico
+app.UseExceptionHandler(errorApp =>
+{
+    errorApp.Run(async context =>
+    {
+        var problem = Results.Problem(
+            title: "Não foi possível processar sua solicitação.",
+            statusCode: StatusCodes.Status500InternalServerError);
+        await problem.ExecuteAsync(context);
+    });
+});
+
 // Inicializar banco de dados SQLite e warm-up do SqlServer
 using (var scope = app.Services.CreateScope())
 {
@@ -25,7 +37,8 @@ using (var scope = app.Services.CreateScope())
 
     var hybridFactory = scope.ServiceProvider.GetRequiredService<IHybridConnectionFactory>();
     using var conn = hybridFactory.CreateConnection(DatabaseType.SqlServer);
-    await conn.ExecuteAsync("SELECT 1");
+    try { await conn.ExecuteAsync("SELECT 1"); }
+    catch (Exception ex) { Console.WriteLine($"Erro no warm-up do banco de dados: {ex.Message}"); }
 }
 
 // Mapeamento de endpoints
