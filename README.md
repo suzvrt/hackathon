@@ -2,7 +2,19 @@
 
 ## 📋 Descrição
 
-Este projeto é uma API de simulação de empréstimos desenvolvida em .NET 8 com foco em performance e escalabilidade. O sistema permite calcular simulações de financiamento usando diferentes metodologias (SAC e PRICE) e implementa padrões arquiteturais modernos para alta performance.
+Este projeto é uma API de simulação de empréstimos desenvolvida em .NET 8 utilizando Native AOT com foco em performance e escalabilidade. O sistema permite calcular simulações de financiamento usando diferentes metodologias (SAC e PRICE) e implementa padrões arquiteturais modernos para alta performance.
+
+## 🤔 Por que usar Native AOT?
+
+**Performance Superior**: Aplicações compiladas nativamente executam mais rápido, sem overhead do runtime .NET.
+
+**Menor Consumo de Recursos**: Reduz significativamente o uso de memória e CPU, ideal para ambientes com recursos limitados.
+
+**Deploy Simplificado**: Um único arquivo executável sem dependências externas, facilitando distribuição e implantação.
+
+**Inicialização Instantânea**: Startup em milissegundos, perfeito para funções serverless e microserviços que precisam responder rapidamente.
+
+> **📖 Para mais informações sobre Native AOT, consulte a [documentação oficial](https://learn.microsoft.com/en-us/aspnet/core/fundamentals/native-aot?view=aspnetcore-8.0).**
 
 ## 🚀 Características Principais
 
@@ -11,6 +23,7 @@ Este projeto é uma API de simulação de empréstimos desenvolvida em .NET 8 co
 - **Performance Superior**: Execução mais rápida e menor uso de memória
 - **Deploy Otimizado**: Binários nativos para diferentes plataformas (Windows, Linux, macOS)
 - **Análise AOT**: Habilitado o analisador AOT para garantir compatibilidade
+- **Segurança**: Menor superfície de ataque
 
 ### Padrão Fire-and-Forget
 - **Processamento Assíncrono**: Simulações são processadas em background sem bloquear a resposta da API
@@ -233,38 +246,6 @@ docker-compose up --build
 ```
 
 > **📖 Para instruções Docker detalhadas, consulte [DOCKER.md](hackathon/DOCKER.md)**
-
-## 📈 Benefícios do Native AOT
-
-- **Inicialização Rápida**: Startup em milissegundos
-- **Menor Memória**: Redução significativa no uso de RAM
-- **Deploy Simples**: Binário único sem dependências
-- **Performance**: Execução nativa sem interpretação
-- **Segurança**: Menor superfície de ataque
-
-## 🤔 Por que usar Native AOT?
-
-**Performance Superior**: Aplicações compiladas nativamente executam mais rápido, sem overhead do runtime .NET.
-
-**Menor Consumo de Recursos**: Reduz significativamente o uso de memória e CPU, ideal para ambientes com recursos limitados.
-
-**Deploy Simplificado**: Um único arquivo executável sem dependências externas, facilitando distribuição e implantação.
-
-**Inicialização Instantânea**: Startup em milissegundos, perfeito para funções serverless e microserviços que precisam responder rapidamente.
-
-## 🔄 Padrão Fire-and-Forget
-
-- **Resposta Imediata**: API retorna rapidamente sem esperar persistência
-- **Processamento Assíncrono**: Simulações são salvas em background
-- **Escalabilidade**: Suporte a múltiplas requisições simultâneas
-- **Resiliência**: Recuperação automática de falhas
-
-## 📊 Sistema de Telemetria
-
-- **Monitoramento Automático**: Middleware captura métricas de todos os endpoints
-- **Métricas em Tempo Real**: Contagem de requisições, tempo de resposta e taxa de sucesso
-- **Persistência Inteligente**: Dados são descarregados a cada 5 minutos para otimizar memória
-- **Performance**: Não impacta a performance da aplicação principal
 
 ## 📝 Exemplos de Uso
 
