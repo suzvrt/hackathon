@@ -27,7 +27,7 @@ public class TelemetriaMiddleware
 
         try
         {
-            // Verificar se o endpoint deve ser excluído da telemetria ANTES de processar
+            // Verificar se o endpoint deve ser excluído da telemetria antes de processar
             shouldExcludeFromTelemetry = ShouldExcludeFromTelemetry(context);
             
             // Processar a requisição
@@ -38,13 +38,12 @@ public class TelemetriaMiddleware
             cronometro.Stop();
         }
 
-        // SOLUÇÃO: Lógica de telemetria movida para FORA do finally
+        // Lógica de telemetria movida para fora do finally para permitir return
         if (shouldExcludeFromTelemetry)
         {
-            return; // ✅ Agora está fora do finally, pode usar return
+            return;
         }
 
-        // SOLUÇÃO: Usar await para garantir que a mensagem seja enviada
         try
         {
             var nomeEndpoint = GetEndpointName(context);

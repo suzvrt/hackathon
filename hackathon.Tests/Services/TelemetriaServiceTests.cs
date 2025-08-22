@@ -1,6 +1,13 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using System.Threading.Channels;
+using Microsoft.Extensions.DependencyInjection;
 using hackathon.Infrastructure.Services;
 using hackathon.Application.Interfaces;
 using hackathon.Domain.Entities;
+using hackathon.Infrastructure.Telemetria;
 
 namespace hackathon.Tests.Services;
 
@@ -16,10 +23,46 @@ public class TelemetriaServiceTests
             return Task.CompletedTask;
         }
 
-        public Task<List<TelemetriaRecord>> ObterTelemetriaPorDataAsync(DateTime dataReferencia)
+        public Task<IEnumerable<TelemetriaRecord>> ObterTelemetriaPorDataAsync(DateOnly dataReferencia)
         {
-            return Task.FromResult(Persistidos.FindAll(r => r.DataReferencia.Date == dataReferencia.Date));
+            return Task.FromResult(Persistidos.Where(r => r.DataReferencia.Date == dataReferencia.ToDateTime(TimeOnly.MinValue).Date));
         }
+    }
+
+    private class ServiceProviderFake : IServiceProvider
+    {
+        private readonly ITelemetriaRepository _repository;
+
+        public ServiceProviderFake(ITelemetriaRepository repository)
+        {
+            _repository = repository;
+        }
+
+        public object GetService(Type serviceType)
+        {
+            if (serviceType == typeof(ITelemetriaRepository))
+                return _repository;
+            return null!;
+        }
+
+        public IServiceScope CreateScope()
+        {
+            return new ServiceScopeFake(_repository);
+        }
+    }
+
+    private class ServiceScopeFake : IServiceScope
+    {
+        private readonly ITelemetriaRepository _repository;
+
+        public ServiceScopeFake(ITelemetriaRepository repository)
+        {
+            _repository = repository;
+        }
+
+        public IServiceProvider ServiceProvider => new ServiceProviderFake(_repository);
+
+        public void Dispose() { }
     }
 
     [Fact]
@@ -27,12 +70,14 @@ public class TelemetriaServiceTests
     {
         // Arrange
         var repo = new TelemetriaRepositoryFake();
-        var service = new TelemetriaService(repo);
+        var serviceProvider = new ServiceProviderFake(repo);
+        var channel = Channel.CreateUnbounded<TelemetriaMessage>();
+        var service = new TelemetriaService(channel, serviceProvider);
 
         // Act
         service.RegistrarRequisicao("GET simulacoes", TimeSpan.FromMilliseconds(100), true);
         service.RegistrarRequisicao("GET simulacoes", TimeSpan.FromMilliseconds(200), false);
-        await service.ObterTelemetriaAsync(DateTime.Today); // força flush
+        await service.ObterTelemetriaAsync(DateOnly.FromDateTime(DateTime.Today)); // força flush
 
         // Assert
         Assert.Single(repo.Persistidos);
@@ -50,10 +95,10 @@ public class TelemetriaServiceTests
     {
         // Arrange
         var repo = new TelemetriaRepositoryFake();
-        var hoje = DateTime.Today;
+        var hoje = DateOnly.FromDateTime(DateTime.Today);
         repo.Persistidos.Add(new TelemetriaRecord
         {
-            DataReferencia = hoje,
+            DataReferencia = hoje.ToDateTime(TimeOnly.MinValue),
             NomeApi = "POST simulacoes",
             QtdRequisicoes = 10,
             TempoMedio = 120,
@@ -62,7 +107,9 @@ public class TelemetriaServiceTests
             PercentualSucesso = 0.9m
         });
 
-        var service = new TelemetriaService(repo);
+        var serviceProvider = new ServiceProviderFake(repo);
+        var channel = Channel.CreateUnbounded<TelemetriaMessage>();
+        var service = new TelemetriaService(channel, serviceProvider);
 
         // Act
         var response = await service.ObterTelemetriaAsync(hoje);

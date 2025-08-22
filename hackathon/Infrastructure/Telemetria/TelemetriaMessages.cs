@@ -8,7 +8,7 @@ public abstract record TelemetriaMessage;
 public readonly record struct TelemetriaEvent
 {
     public string EndpointName { get; init; }
-    public double DurationMs { get; init; } // CORREÇÃO: Agora armazenamos milissegundos diretamente
+    public double DurationMs { get; init; }
     public int StatusCode { get; init; }
     public DateTime Timestamp { get; init; }
 }

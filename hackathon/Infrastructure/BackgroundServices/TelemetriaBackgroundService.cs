@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics; // Adicionado para o Stopwatch
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -21,7 +21,7 @@ public class TelemetriaBackgroundService : BackgroundService
 
     private readonly Dictionary<string, Metrics> _agg = new(StringComparer.Ordinal);
 
-    private static readonly TimeSpan FlushInterval = TimeSpan.FromSeconds(30); // Reduzido de 1 min para 30 segundos
+    private static readonly TimeSpan FlushInterval = TimeSpan.FromSeconds(30);
 
     public TelemetriaBackgroundService(
         Channel<TelemetriaMessage> channel,
@@ -41,15 +41,13 @@ public class TelemetriaBackgroundService : BackgroundService
         {
             try
             {
-                // Tenta ler o que já está no canal imediatamente.
+                // Tenta ler o que já está no canal imediatamente
                 while (_channel.Reader.TryRead(out var message))
                 {
                     ProcessMessage(message);
                 }
 
-                // Agora, espera de forma inteligente:
-                // - Acorda se uma nova mensagem chegar.
-                // - Acorda se o timeout (nosso FlushInterval) for atingido.
+                // Espera de forma inteligente: acorda se uma nova mensagem chegar ou se o timeout for atingido
                 using var cts = new CancellationTokenSource(FlushInterval);
                 using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(stoppingToken, cts.Token);
 
@@ -57,21 +55,20 @@ public class TelemetriaBackgroundService : BackgroundService
             }
             catch (OperationCanceledException) when (!stoppingToken.IsCancellationRequested)
             {
-                // Isso acontece quando nosso timeout (FlushInterval) é atingido. É o comportamento esperado.
-                // A exceção foi causada pelo 'cts.Token', não pelo 'stoppingToken' da aplicação.
+                // Timeout do FlushInterval atingido - comportamento esperado
             }
             catch (OperationCanceledException)
             {
-                // A aplicação está sendo encerrada. Sai do loop.
+                // A aplicação está sendo encerrada
                 break;
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Erro no loop principal do TelemetriaBackgroundService.");
-                await Task.Delay(TimeSpan.FromSeconds(5), stoppingToken); // Evita loop de erro rápido
+                await Task.Delay(TimeSpan.FromSeconds(5), stoppingToken);
             }
 
-            // Seja acordado por mensagem ou por timeout, sempre drenamos e fazemos o flush.
+            // Sempre drenamos e fazemos o flush, seja por mensagem ou por timeout
             await DrainAndFlushAsync(stoppingToken);
         }
 
@@ -82,8 +79,7 @@ public class TelemetriaBackgroundService : BackgroundService
 
     private async Task DrainAndFlushAsync(CancellationToken stoppingToken)
     {
-        // ETAPA 1: DRENAR O CANAL
-        // Lê todas as mensagens que estiverem na fila neste momento e as processa.
+        // Drena o canal: lê todas as mensagens pendentes
         int messagesProcessed = 0;
         while (_channel.Reader.TryRead(out var msg))
         {
@@ -96,12 +92,8 @@ public class TelemetriaBackgroundService : BackgroundService
             _logger.LogInformation("{Count} novas mensagens de telemetria foram processadas.", messagesProcessed);
         }
 
-        // ETAPA 2: FAZER O FLUSH
-        // Agora, com o agregador (_agg) devidamente populado, chamamos o FlushAsync.
-        // O FlushAsync já tem a lógica para não fazer nada se _agg estiver vazio.
-        
-        // SOLUÇÃO: Flush mais frequente se houver muitas mensagens
-        if (messagesProcessed > 5) // Se processou mais de 5 mensagens
+        // Flush mais frequente se houver muitas mensagens para melhor performance
+        if (messagesProcessed > 5)
         {
             _logger.LogInformation("Muitas mensagens processadas ({Count}), forçando flush imediato.", messagesProcessed);
             await FlushAsync(stoppingToken);
@@ -114,7 +106,6 @@ public class TelemetriaBackgroundService : BackgroundService
 
     private void ProcessMessage(TelemetriaEvent ev)
     {
-        // CORREÇÃO: Agora DurationMs já está em milissegundos, não precisa converter
         var durationMs = (int)ev.DurationMs;
         var isSuccess = ev.StatusCode >= 200 && ev.StatusCode <= 299;
 
@@ -159,7 +150,6 @@ public class TelemetriaBackgroundService : BackgroundService
             return;
         }
 
-        // LOG: Ponto de entrada do método de flush.
         _logger.LogInformation("Iniciando flush de {AggCount} registros agregados.", _agg.Count);
         var sw = Stopwatch.StartNew();
 
@@ -192,14 +182,12 @@ public class TelemetriaBackgroundService : BackgroundService
         {
             try
             {
-                // LOG: Ponto crítico - ANTES da chamada ao banco.
                 _logger.LogDebug("Tentativa {Attempt}: Chamando repository.SalvarTelemetriaAsync com {RecordCount} registros.", attempt, registros.Count);
 
                 var repoSw = Stopwatch.StartNew();
                 await repository.SalvarTelemetriaAsync(registros);
                 repoSw.Stop();
 
-                // LOG: Ponto crítico - DEPOIS da chamada ao banco. Se este log aparecer, a operação não travou.
                 _logger.LogInformation("repository.SalvarTelemetriaAsync concluído com sucesso na tentativa {Attempt} em {ElapsedMilliseconds}ms.", attempt, repoSw.ElapsedMilliseconds);
                 break;
             }

@@ -24,12 +24,12 @@ public class TelemetriaService : ITelemetriaService
 
     public async Task<TelemetriaResponse> ObterTelemetriaAsync(DateOnly dataReferencia)
     {
-        // 1) flush sob demanda para garantir que nada fique pendente em memória
+        // Flush sob demanda para garantir que nada fique pendente em memória
         var tcs = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
         await _channel.Writer.WriteAsync(new TelemetriaFlush(tcs));
-        await tcs.Task; // aguarda o worker confirmar o flush
+        await tcs.Task; // Aguarda o worker confirmar o flush
 
-        // 2) lê do repositório (estado persistido)
+        // Lê do repositório (estado persistido)
         using var scope = _serviceProvider.CreateScope();
         var repository = scope.ServiceProvider.GetRequiredService<ITelemetriaRepository>();
         var registros = await repository.ObterTelemetriaPorDataAsync(dataReferencia);
@@ -55,8 +55,8 @@ public class TelemetriaService : ITelemetriaService
         var evento = new TelemetriaEvent
         {
             EndpointName = nomeEndpoint,
-            DurationMs = duracao.TotalMilliseconds, // CORREÇÃO: Usar TotalMilliseconds
-            StatusCode = sucesso ? 200 : 500, // Simplified status code
+            DurationMs = duracao.TotalMilliseconds,
+            StatusCode = sucesso ? 200 : 500,
             Timestamp = DateTime.UtcNow
         };
 
@@ -79,12 +79,11 @@ public class TelemetriaService : ITelemetriaService
         var evento = new TelemetriaEvent
         {
             EndpointName = nomeEndpoint,
-            DurationMs = duracao.TotalMilliseconds, // CORREÇÃO: Usar TotalMilliseconds em vez de Ticks
+            DurationMs = duracao.TotalMilliseconds,
             StatusCode = sucesso ? 200 : 500,
             Timestamp = DateTime.UtcNow
         };
 
-        // SOLUÇÃO: Usar await para garantir que a mensagem seja escrita no canal
         await _channel.Writer.WriteAsync(new TelemetriaEventMessage(evento));
     }
 }
