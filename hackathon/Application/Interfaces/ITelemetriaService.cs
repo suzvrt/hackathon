@@ -5,6 +5,7 @@ namespace hackathon.Application.Interfaces;
 
 public interface ITelemetriaService
 {
+    Task<TelemetriaResponse> ObterTelemetriaAsync(DateOnly dataReferencia);
     void RegistrarRequisicao(string nomeEndpoint, TimeSpan duracao, bool sucesso);
-    Task<TelemetriaResponse> ObterTelemetriaAsync(DateTime dataReferencia);
+    Task RegistrarRequisicaoAsync(string nomeEndpoint, TimeSpan duracao, bool sucesso);
 }

@@ -5,5 +5,5 @@ namespace hackathon.Application.Interfaces;
 public interface ITelemetriaRepository
 {
     Task SalvarTelemetriaAsync(List<TelemetriaRecord> records);
-    Task<List<TelemetriaRecord>> ObterTelemetriaPorDataAsync(DateTime dataReferencia);
+    Task<IEnumerable<TelemetriaRecord>> ObterTelemetriaPorDataAsync(DateOnly dataReferencia);
 }

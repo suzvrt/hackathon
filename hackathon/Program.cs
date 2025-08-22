@@ -1,8 +1,8 @@
 using hackathon.Api.Endpoints;
 using hackathon.Api.Extensions;
 using hackathon.Api.Serialization;
-using hackathon.Infrastructure.Persistence;
 using hackathon.Api.Middleware;
+using hackathon.Infrastructure.Persistence;
 using Dapper;
 
 var builder = WebApplication.CreateSlimBuilder(args);
@@ -41,12 +41,12 @@ using (var scope = app.Services.CreateScope())
     catch (Exception ex) { Console.WriteLine($"Erro no warm-up do banco de dados: {ex.Message}"); }
 }
 
+// Adicionar middleware de telemetria
+app.UseTelemetria();
+
 // Mapeamento de endpoints
 app.MapSimulacoes();
 app.MapProdutos();
 app.MapTelemetria();
-
-// Adicionar middleware de telemetria
-app.UseTelemetria();
 
 app.Run();

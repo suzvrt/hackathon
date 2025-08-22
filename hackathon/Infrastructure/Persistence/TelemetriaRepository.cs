@@ -1,6 +1,10 @@
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 using Microsoft.Data.Sqlite;
 using hackathon.Domain.Entities;
 using hackathon.Application.Interfaces;
+using hackathon.Infrastructure.Persistence;
 using Dapper;
 
 namespace hackathon.Infrastructure.Persistence;
@@ -33,13 +37,6 @@ public class TelemetriaRepository : ITelemetriaRepository
                 PRAGMA synchronous=NORMAL;
                 PRAGMA busy_timeout=5000;";
             await pragmas.ExecuteNonQueryAsync();
-        }
-
-        // Inicia transação IMMEDIATE
-        using (var beginCmd = sqlite.CreateCommand())
-        {
-            beginCmd.CommandText = "BEGIN IMMEDIATE;";
-            await beginCmd.ExecuteNonQueryAsync();
         }
 
         // Agora cria a transação associada
@@ -123,48 +120,22 @@ public class TelemetriaRepository : ITelemetriaRepository
     }
 
     [DapperAot]
-    public async Task<List<TelemetriaRecord>> ObterTelemetriaPorDataAsync(DateTime dataReferencia)
+    public async Task<IEnumerable<TelemetriaRecord>> ObterTelemetriaPorDataAsync(DateOnly dataReferencia)
     {
         using var connection = _connectionFactory.CreateConnection(DatabaseType.Sqlite);
-        var sqlite = (SqliteConnection)connection;
-        await sqlite.OpenAsync();
-
-        using (var pragmas = sqlite.CreateCommand())
-        {
-            pragmas.CommandText = "PRAGMA busy_timeout=5000;";
-            await pragmas.ExecuteNonQueryAsync();
-        }
-
-        const string selectSql = @"
-            SELECT Id, DataReferencia, NomeApi, QtdRequisicoes, TempoMedio,
+        
+        const string sql = @"
+            SELECT
+                Id, DataReferencia, NomeApi, QtdRequisicoes, TempoMedio,
                 TempoMinimo, TempoMaximo, PercentualSucesso, CriadoEm
             FROM Telemetria
-            WHERE date(DataReferencia) = date(@DataReferencia)
+            WHERE DataReferencia = @DataReferenciaStr
             ORDER BY NomeApi;";
-
-        using var cmd = sqlite.CreateCommand();
-        cmd.CommandText = selectSql;
-        cmd.CommandTimeout = 5;
-        cmd.Parameters.Add(new SqliteParameter("@DataReferencia", dataReferencia.ToString("yyyy-MM-dd")));
-
-        var registros = new List<TelemetriaRecord>();
-        using var reader = await cmd.ExecuteReaderAsync();
-        while (await reader.ReadAsync())
-        {
-            registros.Add(new TelemetriaRecord
-            {
-                Id = reader.GetString(0),
-                DataReferencia = DateTime.Parse(reader.GetString(1)),
-                NomeApi = reader.GetString(2),
-                QtdRequisicoes = reader.GetInt32(3),
-                TempoMedio = reader.GetInt32(4),
-                TempoMinimo = reader.GetInt32(5),
-                TempoMaximo = reader.GetInt32(6),
-                PercentualSucesso = reader.GetDecimal(7),
-                CriadoEm = DateTime.Parse(reader.GetString(8))
-            });
-        }
-
-        return registros;
+        
+        var parametro = new { 
+            DataReferenciaStr = dataReferencia.ToString("yyyy-MM-dd") 
+        };
+        
+        return await connection.QueryAsync<TelemetriaRecord>(sql, parametro);
     }
 }

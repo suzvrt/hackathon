@@ -1,4 +1,3 @@
-using System.Threading.Channels;
 using hackathon.Application.Interfaces;
 using hackathon.Application.UseCases;
 using hackathon.Infrastructure.BackgroundServices;
@@ -6,7 +5,8 @@ using hackathon.Infrastructure.Config;
 using hackathon.Infrastructure.Events;
 using hackathon.Infrastructure.Persistence;
 using hackathon.Infrastructure.Services;
-using hackathon.Infrastructure.Telemetry;
+using hackathon.Infrastructure.Telemetria;
+using System.Threading.Channels;
 
 namespace hackathon.Api.Extensions;
 
@@ -23,7 +23,7 @@ public static class DependencyInjection
         var sqliteSettings = new SqliteSettings
         {
             DatabasePath = configuration["Sqlite:DatabasePath"] ?? "hackathon.db",
-            ConnectionString = configuration["Sqlite:ConnectionString"] ?? "Data Source=hackathon.db;Cache=Shared;"
+            ConnectionString = configuration["Sqlite:ConnectionString"] ?? "Data Source=hackathon.db;Cache=Shared;Mode=Wal;"
         };
 
         var eventHubSettings = new EventHubSettings
@@ -53,17 +53,19 @@ public static class DependencyInjection
         services.AddScoped<IObterSimulacoesUseCase, ObterSimulacoesUseCase>();
         services.AddScoped<IObterVolumeDiarioUseCase, ObterVolumeDiarioUseCase>();
 
-        // Serviços de telemetria
-        services.AddSingleton<ITelemetriaRepository, TelemetriaRepository>();
-
-        // Canal singleton (SingleReader/MultipleWriters)
-        services.AddSingleton(Channel.CreateUnbounded<TelemetriaMessage>(
-            new UnboundedChannelOptions { SingleReader = true, SingleWriter = false }));
-
-        // Fachada que enfileira e o repositório já existente
+        // Serviços de Telemetria
         services.AddSingleton<ITelemetriaService, TelemetriaService>();
-
-        // Worker que agrega e persiste
+        services.AddSingleton<Channel<TelemetriaMessage>>(sp =>
+        {
+            var options = new BoundedChannelOptions(10000)
+            {
+                FullMode = BoundedChannelFullMode.Wait,
+                SingleReader = true,
+                SingleWriter = false
+            };
+            return Channel.CreateBounded<TelemetriaMessage>(options);
+        });
+        services.AddScoped<ITelemetriaRepository, TelemetriaRepository>();
         services.AddHostedService<TelemetriaBackgroundService>();
     }
 }

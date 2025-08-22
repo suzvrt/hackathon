@@ -1,33 +1,28 @@
+using System;
+using System.Linq;
+using System.Threading.Tasks;
 using System.Threading.Channels;
+using Microsoft.Extensions.DependencyInjection;
 using hackathon.Application.Dtos;
 using hackathon.Application.Interfaces;
-using hackathon.Infrastructure.Telemetry;
+using hackathon.Infrastructure.Telemetria;
 
 namespace hackathon.Infrastructure.Services;
 
 public class TelemetriaService : ITelemetriaService
 {
     private readonly Channel<TelemetriaMessage> _channel;
-    private readonly ITelemetriaRepository _repository;
+    private readonly IServiceProvider _serviceProvider;
 
     public TelemetriaService(
         Channel<TelemetriaMessage> channel,
-        ITelemetriaRepository repository)
+        IServiceProvider serviceProvider)
     {
         _channel = channel;
-        _repository = repository;
+        _serviceProvider = serviceProvider;
     }
 
-    public void RegistrarRequisicao(string nomeEndpoint, TimeSpan duracao, bool sucesso)
-    {
-        // não bloqueia o request; canal é unbounded (SingleReader, MultiWriter)
-        _channel.Writer.TryWrite(new TelemetriaEvent(
-            nomeEndpoint,
-            (int)duracao.TotalMilliseconds,
-            sucesso));
-    }
-
-    public async Task<TelemetriaResponse> ObterTelemetriaAsync(DateTime dataReferencia)
+    public async Task<TelemetriaResponse> ObterTelemetriaAsync(DateOnly dataReferencia)
     {
         // 1) flush sob demanda para garantir que nada fique pendente em memória
         var tcs = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -35,7 +30,9 @@ public class TelemetriaService : ITelemetriaService
         await tcs.Task; // aguarda o worker confirmar o flush
 
         // 2) lê do repositório (estado persistido)
-        var registros = await _repository.ObterTelemetriaPorDataAsync(dataReferencia);
+        using var scope = _serviceProvider.CreateScope();
+        var repository = scope.ServiceProvider.GetRequiredService<ITelemetriaRepository>();
+        var registros = await repository.ObterTelemetriaPorDataAsync(dataReferencia);
         var dataFormatada = dataReferencia.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture);
 
         return new TelemetriaResponse
@@ -51,5 +48,43 @@ public class TelemetriaService : ITelemetriaService
                 PercentualSucesso = r.PercentualSucesso
             }).ToList()
         };
+    }
+
+    public void RegistrarRequisicao(string nomeEndpoint, TimeSpan duracao, bool sucesso)
+    {
+        var evento = new TelemetriaEvent
+        {
+            EndpointName = nomeEndpoint,
+            DurationMs = duracao.TotalMilliseconds, // CORREÇÃO: Usar TotalMilliseconds
+            StatusCode = sucesso ? 200 : 500, // Simplified status code
+            Timestamp = DateTime.UtcNow
+        };
+
+        // Write to channel asynchronously to avoid blocking
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                await _channel.Writer.WriteAsync(new TelemetriaEventMessage(evento));
+            }
+            catch
+            {
+                // Falhar silenciosamente - telemetria não deve quebrar a aplicação principal
+            }
+        });
+    }
+
+    public async Task RegistrarRequisicaoAsync(string nomeEndpoint, TimeSpan duracao, bool sucesso)
+    {
+        var evento = new TelemetriaEvent
+        {
+            EndpointName = nomeEndpoint,
+            DurationMs = duracao.TotalMilliseconds, // CORREÇÃO: Usar TotalMilliseconds em vez de Ticks
+            StatusCode = sucesso ? 200 : 500,
+            Timestamp = DateTime.UtcNow
+        };
+
+        // SOLUÇÃO: Usar await para garantir que a mensagem seja escrita no canal
+        await _channel.Writer.WriteAsync(new TelemetriaEventMessage(evento));
     }
 }
