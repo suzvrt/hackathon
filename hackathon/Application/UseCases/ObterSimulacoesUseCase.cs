@@ -12,6 +12,6 @@ public sealed class ObterSimulacoesUseCase : IObterSimulacoesUseCase
 
     public async Task<PaginacaoResultado<SimulacaoResumo>> ExecutarAsync(ListarRequest request)
     {
-        return await _repository.ObterPaginadoAsync(request.Pagina, request.QtdRegistrosPagina);
+        return await _repository.ObterPaginadoAsync(request.Pagina, request.QtdRegistrosPagina, request.Sistema);
     }
 }

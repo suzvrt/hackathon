@@ -6,5 +6,5 @@ namespace hackathon.Application.Interfaces;
 public interface ISimulacaoRepository
 {
     Task SalvarAsync(Simulacao simulacao);
-    Task<PaginacaoResultado<SimulacaoResumo>> ObterPaginadoAsync(int pagina, int qtdRegistrosPagina);
+    Task<PaginacaoResultado<SimulacaoResumo>> ObterPaginadoAsync(int pagina, int qtdRegistrosPagina, string sistema);
 }

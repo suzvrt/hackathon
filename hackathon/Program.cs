@@ -38,7 +38,7 @@ using (var scope = app.Services.CreateScope())
     var hybridFactory = scope.ServiceProvider.GetRequiredService<IHybridConnectionFactory>();
     using var conn = hybridFactory.CreateConnection(DatabaseType.SqlServer);
     try { await conn.ExecuteAsync("SELECT 1"); }
-    catch (Exception ex) { Console.WriteLine($"Erro no warm-up do banco de dados: {ex.Message}"); }
+    catch (Exception ex) { app.Logger.LogError($"Erro no warm-up do banco de dados: {ex.Message}"); }
 }
 
 // Adicionar middleware de telemetria

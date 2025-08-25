@@ -32,7 +32,6 @@ public class SimulacaoRepository : ISimulacaoRepository
                   )
                   """;
         
-        // MUDANÇA: Usando um 'record' nomeado em vez de um objeto anônimo
         var parameters = new SalvarSimulacaoParams(
             simulacao.Id,
             simulacao.ValorDesejado,
@@ -48,20 +47,26 @@ public class SimulacaoRepository : ISimulacaoRepository
     }
 
     [DapperAot]
-    public async Task<PaginacaoResultado<SimulacaoResumo>> ObterPaginadoAsync(int pagina, int qtdRegistrosPagina)
+    public async Task<PaginacaoResultado<SimulacaoResumo>> ObterPaginadoAsync(int pagina, int qtdRegistrosPagina, string sistema)
     {
+        string jsonColumnName = sistema?.ToUpperInvariant() switch
+        {
+            "SAC" => "SimulacaoSac",
+            "PRICE" => "SimulacaoPrice",
+            _ => throw new ArgumentException("Sistema de amortização inválido. Use 'SAC' ou 'PRICE'.", nameof(sistema))
+        };
+
         using var connection = _connectionFactory.CreateConnection(DatabaseType.Sqlite);
         var offset = (pagina - 1) * qtdRegistrosPagina;
 
         var countSql = "SELECT COUNT(*) FROM Simulacao;";
-        var dataSql = """
-                      SELECT Id, SimulacaoPrice, ValorDesejado
+        var dataSql = $"""
+                      SELECT Id, ValorDesejado, {jsonColumnName} AS DadosSimulacao
                       FROM Simulacao
                       ORDER BY CriadoEm DESC
                       LIMIT @QtdRegistrosPagina OFFSET @Offset;
                       """;
 
-        // MUDANÇA: Usando um 'record' nomeado
         var parameters = new ObterPaginadoParams(qtdRegistrosPagina, offset);
 
         var totalRegistros = await connection.ExecuteScalarAsync<int>(countSql);
@@ -83,9 +88,9 @@ public class SimulacaoRepository : ISimulacaoRepository
                 if (Guid.TryParse(idString, out var guid)) { id = guid.GetHashCode(); }
                 else { id = idString.GetHashCode(); }
                 
-                var simulacaoPrice = row.SimulacaoPrice;
+                var dadosSimulacao = row.DadosSimulacao;
                 var valorDesejado = row.ValorDesejado ?? 0m;
-                var parcelas = JsonSerializer.Deserialize(simulacaoPrice, AppJsonSerializerContext.Default.ListParcela);
+                var parcelas = JsonSerializer.Deserialize(dadosSimulacao, AppJsonSerializerContext.Default.ListParcela);
                 if (parcelas is null || parcelas.Count == 0) return null;
 
                 return new SimulacaoResumo
@@ -113,11 +118,10 @@ public class SimulacaoRepository : ISimulacaoRepository
 internal class SimulacaoDataModel
 {
     public string Id { get; set; } = "";
-    public string SimulacaoPrice { get; set; } = "";
+    public string DadosSimulacao { get; set; } = "";
     public decimal? ValorDesejado { get; set; }
 }
 
-// Novo record para os parâmetros de salvar
 internal record SalvarSimulacaoParams(
     Guid Id,
     decimal ValorDesejado,
@@ -129,5 +133,4 @@ internal record SalvarSimulacaoParams(
     string SimulacaoPrice
 );
 
-// Novo record para os parâmetros de paginação
 internal record ObterPaginadoParams(int QtdRegistrosPagina, int Offset);

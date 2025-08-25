@@ -1,10 +1,6 @@
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using Microsoft.Data.Sqlite;
 using hackathon.Domain.Entities;
 using hackathon.Application.Interfaces;
-using hackathon.Infrastructure.Persistence;
 using Dapper;
 
 namespace hackathon.Infrastructure.Persistence;
@@ -46,7 +42,7 @@ public class TelemetriaRepository : ITelemetriaRepository
         // Garante unicidade por (DataReferencia, NomeApi)
         using (var idx = sqlite.CreateCommand())
         {
-            idx.Transaction = (SqliteTransaction)tx;
+            idx.Transaction = tx;
             idx.CommandText = @"
                 CREATE UNIQUE INDEX IF NOT EXISTS UX_Telemetria_Data_Nome
                 ON Telemetria (DataReferencia, NomeApi);";
@@ -84,7 +80,7 @@ public class TelemetriaRepository : ITelemetriaRepository
                 END;";
 
         using var cmd = sqlite.CreateCommand();
-        cmd.Transaction = (SqliteTransaction)tx;
+        cmd.Transaction = tx;
         cmd.CommandText = upsertSql;
         cmd.CommandTimeout = 5;
 
@@ -110,7 +106,7 @@ public class TelemetriaRepository : ITelemetriaRepository
             pMedio.Value = r.TempoMedio;
             pMin.Value = r.TempoMinimo;
             pMax.Value = r.TempoMaximo;
-            pPct.Value = (double)r.PercentualSucesso; // REAL em SQLite
+            pPct.Value = (double)r.PercentualSucesso;
             pCriadoEm.Value = r.CriadoEm.ToString("yyyy-MM-dd HH:mm:ss");
 
             await cmd.ExecuteNonQueryAsync();

@@ -22,7 +22,6 @@ public class SqliteInitializer : ISqliteInitializer
         using var connection = new SqliteConnection(_settings.ConnectionString);
         await connection.OpenAsync();
 
-        // Criar tabela Simulacao
         var createSimulacaoTable = """
             CREATE TABLE IF NOT EXISTS Simulacao (
                 Id TEXT PRIMARY KEY,
@@ -52,7 +51,6 @@ public class SqliteInitializer : ISqliteInitializer
             await command.ExecuteNonQueryAsync();
         }
 
-        // Criar tabela Telemetria
         var createTelemetriaTable = """
             CREATE TABLE IF NOT EXISTS Telemetria (
                 Id TEXT PRIMARY KEY,

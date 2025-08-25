@@ -1,8 +1,4 @@
-using System;
-using System.Linq;
-using System.Threading.Tasks;
 using System.Threading.Channels;
-using Microsoft.Extensions.DependencyInjection;
 using hackathon.Application.Dtos;
 using hackathon.Application.Interfaces;
 using hackathon.Infrastructure.Telemetria;
@@ -60,7 +56,6 @@ public class TelemetriaService : ITelemetriaService
             Timestamp = DateTime.UtcNow
         };
 
-        // Write to channel asynchronously to avoid blocking
         _ = Task.Run(async () =>
         {
             try

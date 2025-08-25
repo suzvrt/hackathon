@@ -120,7 +120,7 @@ public class TelemetriaBackgroundService : BackgroundService
         if (isSuccess) m.SuccessfulRequests++;
         m.TotalDuration += durationMs;
 
-        if (m.MinDuration == 0 || durationMs < m.MinDuration)
+        if (durationMs < m.MinDuration)
             m.MinDuration = durationMs;
         if (durationMs > m.MaxDuration)
             m.MaxDuration = durationMs;
