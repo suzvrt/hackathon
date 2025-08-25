@@ -36,7 +36,7 @@ Este projeto é uma API de simulação de empréstimos desenvolvida em .NET 8 ut
 - **Métricas em Tempo Real**: Contagem de requisições, tempo de resposta e taxa de sucesso
 - **Análise Histórica**: Consultas por data
 - **Agregação via Channel**: Eventos de telemetria são enfileirados e processados por um único worker (evita concorrência).
-- **Flush Inteligente**: Persistência periódica (1 min) e sob demanda (antes de consultas).
+- **Flush Inteligente**: Persistência periódica (30 seg) e sob demanda (antes de consultas).
 - **UPSERT Idempotente**: Métricas agregadas por dia/endpoint no SQLite, com retry para lidar com locks.
 
 ### Arquitetura Limpa
@@ -157,6 +157,7 @@ Lista simulações realizadas com paginação.
 **Query Parameters:**
 - `pagina` (opcional): Número da página (padrão: 1)
 - `qtdRegistrosPagina` (opcional): Registros por página (padrão: 200)
+- `sistema` (opcional): Sistema de amortização (padrão: "PRICE")
 
 **Response:**
 ```json
@@ -213,7 +214,7 @@ Obtém métricas de telemetria para uma data específica.
   "dataReferencia": "2025-01-27",
   "listaEndpoints": [
     {
-      "nomeApi": "Simulacao",
+      "nomeApi": "POST /simulacao",
       "qtdRequisicoes": 150,
       "tempoMedio": 45,
       "tempoMinimo": 12,
