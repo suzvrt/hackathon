@@ -10,7 +10,7 @@ Accept: application/json
 
 ###
 
-GET {{hackathon_HostAddress}}/simulacoes?pagina=1&qtdRegistrosPagina=200
+GET {{hackathon_HostAddress}}/simulacoes?pagina=1&qtdRegistrosPagina=200&sistema=PRICE
 Accept: application/json
 
 ###

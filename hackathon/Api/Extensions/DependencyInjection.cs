@@ -32,6 +32,8 @@ public static class DependencyInjection
                 ?? throw new InvalidOperationException("String de conexão do EventHub não encontrada.")
         };
 
+        services.AddMemoryCache();
+
         services.AddSingleton(dbSettings);
         services.AddSingleton(sqliteSettings);
         services.AddSingleton(eventHubSettings);

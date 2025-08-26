@@ -5,6 +5,7 @@ using hackathon.Application.Dtos;
 using hackathon.Domain.ValueObjects;
 using System.Text.Json;
 using hackathon.Api.Serialization;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace hackathon.Infrastructure.Persistence;
 
@@ -12,15 +13,22 @@ namespace hackathon.Infrastructure.Persistence;
 public class ProdutoRepository : IProdutoRepository
 {
     private readonly HybridConnectionFactory _connectionFactory;
+    private readonly IMemoryCache _cache;
 
-    public ProdutoRepository(HybridConnectionFactory connectionFactory)
+    public ProdutoRepository(HybridConnectionFactory connectionFactory, IMemoryCache cache)
     {
         _connectionFactory = connectionFactory;
+        _cache = cache;
     }
 
     [DapperAot]
     public async Task<IEnumerable<Produto>> ObterProdutosCompativeisAsync(decimal valor, int prazo)
     {
+        if (_cache.TryGetValue((valor, prazo), out IEnumerable<Produto>? produtosCache))
+        {
+            return produtosCache!;
+        }
+
         using var connection = _connectionFactory.CreateConnection(DatabaseType.SqlServer);
 
         var sql = """
@@ -36,7 +44,6 @@ public class ProdutoRepository : IProdutoRepository
                   AND NU_MINIMO_MESES <= @prazo AND (NU_MAXIMO_MESES IS NULL OR NU_MAXIMO_MESES >= @prazo)
                   """;
 
-        // MUDANÇA: Substituindo o objeto anônimo por um record nomeado.
         var parameters = new ObterProdutosParams(valor, prazo);
         return await connection.QueryAsync<Produto>(sql, parameters);
     }
@@ -64,7 +71,6 @@ public class ProdutoRepository : IProdutoRepository
                   WHERE date(CriadoEm) = @DataReferencia
                   """;
 
-        // MUDANÇA: Substituindo DynamicParameters por um record nomeado.
         var parameters = new ObterVolumeParams(dataReferencia.ToString("yyyy-MM-dd"));
         
         var registrosBrutos = await connection.QueryAsync<SimulacaoDiariaDataModel>(sql, parameters);
