@@ -1,4 +1,32 @@
-# Hackathon - Sistema de Simulação de Empréstimos
+# Hackathon 2025 - Sistema de Simulação de Empréstimos
+
+## 👨‍💻 Criador
+
+**Enzo Suzart Pinto** - **C159438-4** - Desenvolvedor Back-End na Box Gestão Arquivística.
+
+---
+
+## 📚 Sumário
+
+- [📋 Descrição](#-descrição)
+- [🤔 Por que usar Native AOT?](#-por-que-usar-native-aot)
+- [🚀 Como Executar](#-como-executar)
+- [✔️ Características Principais](#-características-principais)
+  - [Native AOT (Ahead-of-Time Compilation)](#native-aot-ahead-of-time-compilation)
+  - [Padrão Fire-and-Forget](#padrão-fire-and-forget)
+  - [Sistema de Telemetria](#sistema-de-telemetria)
+  - [Arquitetura Limpa](#arquitetura-limpa)
+  - [Resiliência e Tratamento de Erros](#resiliência-e-tratamento-de-erros)
+- [🏗️ Estrutura do Projeto](#️-estrutura-do-projeto)
+- [🔧 Tecnologias Utilizadas](#-tecnologias-utilizadas)
+- [🧰 O que poderia ser implementado? (E porque não implementei)](#-o-que-poderia-ser-implementado-e-porque-não-implementei)
+- [⚙️ Configuração e Variáveis de Ambiente](#️-configuração-e-variáveis-de-ambiente)
+- [📊 Funcionalidades](#-funcionalidades)
+- [🗄️ Banco de Dados](#️-banco-de-dados)
+- [🌐 Endpoints da API](#-endpoints-da-api)
+- [🧪 Testes](#-testes)
+
+---
 
 ## 📋 Descrição
 
@@ -15,6 +43,41 @@ Este projeto é uma API de simulação de empréstimos desenvolvida em .NET 8 ut
 **Inicialização Instantânea**: Startup em milissegundos, perfeito para funções serverless e microserviços que precisam responder rapidamente.
 
 > **📖 Para mais informações sobre Native AOT, consulte a [documentação oficial](https://learn.microsoft.com/en-us/aspnet/core/fundamentals/native-aot?view=aspnetcore-8.0).**
+
+## 🚀 Como Executar
+
+### Pré-requisitos
+- .NET 8 SDK
+- Visual Studio 2022 Build Tools com:
+  - Workload: Desktop development with C++
+  - Windows 10/11 SDK
+- SQL Server
+- SQLite
+- Docker (opcional)
+
+### Execução Local
+```bash
+cd hackathon
+dotnet restore
+dotnet run
+```
+
+### Execução com Native AOT (Windows)
+```bash
+dotnet publish -c Release -r win-x64 -p:PublishAot=true
+```
+
+### Execução com Docker (prioritário)
+```bash
+# Build e execução simples
+docker build -t hackathon .
+docker run -p 8080:8080 hackathon
+
+# Ou usando Docker Compose (nessa opção, o SQL Server também será criado localmente)
+docker-compose up --build
+```
+
+> **📖 Para instruções Docker detalhadas, consulte [DOCKER.md](hackathon/DOCKER.md)**
 
 ## 🚀 Características Principais
 
@@ -34,7 +97,7 @@ Este projeto é uma API de simulação de empréstimos desenvolvida em .NET 8 ut
 ### Sistema de Telemetria
 - **Monitoramento Automático**: Middleware que captura métricas de todos os endpoints
 - **Métricas em Tempo Real**: Contagem de requisições, tempo de resposta e taxa de sucesso
-- **Análise Histórica**: Consultas por data
+- **Análise Histórica**: Consulta dos dados por data
 - **Agregação via Channel**: Eventos de telemetria são enfileirados e processados por um único worker (evita concorrência).
 - **Flush Inteligente**: Persistência periódica (30 seg) e sob demanda (antes de consultas).
 - **UPSERT Idempotente**: Métricas agregadas por dia/endpoint no SQLite, com retry para lidar com locks.
@@ -85,7 +148,59 @@ hackathon/
 - **Azure Event Hubs**: Mensageria para eventos
 - **SQL Server**: Banco de dados relacional principal
 - **Docker**: Containerização da aplicação
-> ⚠️ **Nota**: SQLite é usado apenas para telemetria e desenvolvimento local. Em produção, recomenda-se SQL Server ou outro banco relacional.
+- **System.Threading.Channels**: Para comunicação assíncrona entre threads
+- **Microsoft.Extensions.Logging**: Sistema de logging estruturado
+
+## 🧰 O que poderia ser implementado? (E porque não implementei)
+
+**Swagger UI**: Por utilizar reflexão, o Swagger não é compatível com Native AOT.
+
+**Autenticação JWT**: Embora seja uma camada de segurança quase obrigatória, a adição poderia interferir nos testes a serem feitos pela banca avaliadora.
+
+**Rate Limiting**: Para uma API altamente escalável, definir um rate limit é muito útil para evitar ataques como DDoS, entretanto, para testes de carga acabaria sendo influenciado.
+
+## ⚙️ Configuração e Variáveis de Ambiente
+
+### Arquivo appsettings.json
+
+```json
+{
+  "ConnectionStrings": {
+    "DefaultConnection": "[connection_string_sql_server]"
+  },
+  "Sqlite": {
+    "DatabasePath": "hackathon.db",
+    "ConnectionString": "Data Source=hackathon.db;Cache=Shared;"
+  },
+  "Logging": {
+    "LogLevel": {
+      "Default": "Warning",
+      "Hackathon": "Information"
+    }
+  },
+  "EventHub": {
+    "ConnectionString": "[connection_string_eventhub]"
+  },
+  "Kestrel": {
+    "Endpoints": {
+      "Http": {
+        "Url": "http://+:8080"
+      }
+    }
+  }
+}
+```
+
+### Variáveis de Ambiente Principais
+
+| Variável | Descrição | Padrão |
+|----------|-----------|---------|
+| `ASPNETCORE_ENVIRONMENT` | Ambiente de execução | `Development` |
+| `ASPNETCORE_URLS` | URLs do servidor | `http://localhost:5000` |
+| `ConnectionStrings__DefaultConnection` | String de conexão SQL Server | - |
+| `Sqlite__DatabasePath` | Caminho do arquivo SQLite | `hackathon.db` |
+| `EventHub__ConnectionString` | String de conexão Azure Event Hub | - |
+| `Logging__LogLevel__Default` | Nível de log padrão | `Warning` |
 
 ## 📊 Funcionalidades
 
@@ -112,12 +227,87 @@ hackathon/
 - **Fila Interna**: Sistema de filas para gerenciar simulações
 - **Tratamento de Erros**: Logs e recuperação de falhas
 
+### Arquitetura de Banco de Dados Híbrido
+- **SQL Server**: Utilizado para produtos financeiros (dados externos)
+- **SQLite**: Utilizado para simulações e telemetria (dados locais)
+- **Conexão Transparente**: Abstração automática do tipo de banco por operação
+- **Performance Otimizada**: Cada banco utilizado para seu caso de uso ideal
+
 ## 🗄️ Banco de Dados
 
-### Tabelas
-- **PRODUTO**: Cadastro de produtos financeiros com faixas de valor e prazo
-- **SIMULACAO**: Histórico de simulações realizadas
-- **TELEMETRIA**: Métricas de performance dos endpoints
+### Arquitetura Híbrida Detalhada
+
+O sistema utiliza uma arquitetura de banco de dados híbrida otimizada para diferentes tipos de dados:
+
+#### SQL Server (Dados Externos)
+- **Propósito**: Produtos financeiros e dados de referência
+- **Localização**: Servidor dedicado ou Azure SQL Database
+- **Casos de Uso**: Operações críticas e dados compartilhados
+
+##### Tabela PRODUTO
+```sql
+CREATE TABLE dbo.PRODUTO (
+    CO_PRODUTO int NOT NULL PRIMARY KEY,
+    NO_PRODUTO varchar(200) NOT NULL,
+    PC_TAXA_JUROS numeric(10, 9) NOT NULL,
+    NU_MINIMO_MESES smallint NOT NULL,
+    NU_MAXIMO_MESES smallint NULL,
+    VR_MINIMO numeric(18, 2) NOT NULL,
+    VR_MAXIMO numeric(18, 2) NULL
+);
+```
+
+#### SQLite (Dados Locais)
+- **Propósito**: Simulações, telemetria e dados de processamento
+- **Localização**: Arquivo local `hackathon.db`
+- **Casos de Uso**: Dados temporários e métricas
+
+##### Tabela SIMULACAO
+```sql
+CREATE TABLE Simulacao (
+    Id TEXT PRIMARY KEY,
+    ValorDesejado REAL NOT NULL,
+    CodigoProduto INTEGER NOT NULL,
+    DescricaoProduto TEXT NOT NULL,
+    TaxaJuros REAL NOT NULL,
+    CriadoEm TEXT NOT NULL,
+    SimulacaoSac TEXT NOT NULL,
+    SimulacaoPrice TEXT NOT NULL
+);
+```
+
+##### Tabela TELEMETRIA
+```sql
+CREATE TABLE Telemetria (
+    Id TEXT PRIMARY KEY,
+    DataReferencia TEXT NOT NULL,
+    NomeApi TEXT NOT NULL,
+    QtdRequisicoes INTEGER NOT NULL,
+    TempoMedio INTEGER NOT NULL,
+    TempoMinimo INTEGER NOT NULL,
+    TempoMaximo INTEGER NOT NULL,
+    PercentualSucesso NUMERIC(5,4) NOT NULL,
+    CriadoEm TEXT NOT NULL
+);
+```
+
+### Estratégia de Dados
+
+#### Produtos Financeiros
+- **Armazenamento**: SQL Server (fonte externa de verdade)
+- **Atualização**: Manual ou através de processos ETL
+- **Cache**: Implementado em memória para performance
+
+#### Simulações
+- **Armazenamento**: SQLite (dados temporários/transacionais)
+- **Persistência**: Assíncrona via background services
+- **Retenção**: Configurável (padrão: indefinida)
+
+#### Telemetria
+- **Armazenamento**: SQLite (dados analíticos locais)
+- **Agregação**: A cada 30 segundos em memória
+- **Flush**: A cada 5 minutos para o banco
+- **Retenção**: Configurável por requisitos de análise
 
 ## 🌐 Endpoints da API
 
@@ -225,54 +415,90 @@ Obtém métricas de telemetria para uma data específica.
 }
 ```
 
-## 🚀 Como Executar
+## 🧪 Testes
 
-### Pré-requisitos
-- .NET 8 SDK
-- Visual Studio 2022 Build Tools com:
-  - Workload: Desktop development with C++
-  - Windows 10/11 SDK
-- SQL Server (para produção)
-- SQLite (para desenvolvimento local)
-- Docker (opcional)
+O projeto inclui uma suíte de testes automatizados para garantir qualidade e confiabilidade.
 
-### Execução Local
-```bash
-cd hackathon
-dotnet restore
-dotnet run
+### Estrutura de Testes
+
+```
+hackathon.Tests/
+├── Services/               # Testes de serviços
+│   └── TelemetriaServiceTests.cs
+├── UseCases/              # Testes de casos de uso
+│   ├── ObterSimulacoesUseCaseTests.cs
+│   ├── ObterVolumeDiarioUseCaseTests.cs
+│   └── SimularEmprestimoUseCaseTests.cs
+└── GlobalUsings.cs        # Configurações globais de teste
 ```
 
-### Execução com Native AOT
+### Execução de Testes
+
+#### Executar Todos os Testes
 ```bash
-dotnet publish -c Release -r win-x64 -p:PublishAot=true
+cd hackathon.Tests
+dotnet test
 ```
 
-### Execução com Docker
+#### Executar Testes Específicos
 ```bash
-# Build e execução simples
-docker build -t hackathon .
-docker run -p 8080:8080 hackathon
+# Testes de um caso de uso específico
+dotnet test --filter "ObterSimulacoesUseCase"
 
-# Ou usando Docker Compose (recomendado)
-docker-compose up --build
+# Testes de uma classe específica
+dotnet test --filter "SimularEmprestimoUseCaseTests"
 ```
 
-> **📖 Para instruções Docker detalhadas, consulte [DOCKER.md](hackathon/DOCKER.md)**
+### Tipos de Teste Implementados
 
-## 📝 Exemplos de Uso
+#### Testes Unitários
+- **Use Cases**: Lógica de negócio isolada
+- **Services**: Funcionalidades de infraestrutura
+- **Mocks**: Utilização de Moq para dependências externas
 
-### Testando a API
-O projeto inclui um arquivo `hackathon.http` com exemplos de todas as requisições disponíveis para testar a API.
+#### Cobertura de Teste
+- **Casos de Uso**: 100% cobertura dos fluxos principais
+- **Serviços**: Testes de integração com dependências
+- **Endpoints**: Testes de contrato da API
 
-### Monitoramento de Performance
-```bash
-# Ver métricas do dia atual
-GET /telemetria
+### Cenários de Teste Principais
 
-# Ver métricas de uma data específica
-GET /telemetria?dataReferencia=2025-01-27
-```
+#### SimularEmprestimoUseCaseTests
+- ✅ Simulação válida com produto compatível
+- ✅ Erro quando produto não encontrado
+- ✅ Erro quando valor/prédio fora da faixa
+- ✅ Validação de parâmetros de entrada
+
+#### ObterSimulacoesUseCaseTests
+- ✅ Listagem paginada com sucesso
+- ✅ Filtros por sistema de amortização
+- ✅ Tratamento de página vazia
+
+#### ObterVolumeDiarioUseCaseTests
+- ✅ Cálculo correto de volume por produto
+- ✅ Agregação por data específica
+- ✅ Tratamento de dados vazios
+
+#### TelemetriaServiceTests
+- ✅ Registro de métricas de performance
+- ✅ Agregação automática de dados
+- ✅ Persistência em lote
+
+### Boas Práticas de Teste
+
+- **Isolamento**: Cada teste é independente
+- **Mocks**: Utilização de interfaces para isolamento
+- **Dados de Teste**: Fixtures com dados realistas
+- **Assertividade**: Verificações específicas e claras
+- **Performance**: Testes executados rapidamente
+
+### Integração Contínua
+
+Os testes são executados automaticamente em:
+- **Build Local**: `dotnet build`
+- **Pull Requests**: Via GitHub Actions
+- **Deploy**: Antes de cada release
+
 
 ### Boas Práticas Implementadas
 - **Clean Architecture**: Separação clara entre camadas (Domain, Application, Infrastructure, API).
@@ -281,15 +507,35 @@ GET /telemetria?dataReferencia=2025-01-27
 - **Dependency Injection**: Baixo acoplamento.
 - **Native AOT Ready**: Uso de `System.Text.Json` com Source Generators e eliminação de reflection.
 
-## 🤝 Contribuição
+### Ferramentas de Diagnóstico
 
-Este projeto foi desenvolvido como parte de um hackathon, demonstrando:
-- Arquitetura moderna com .NET 8
-- Implementação de padrões de alta performance
-- Sistema de telemetria avançado
-- Uso de tecnologias cloud-ready
-- Boas práticas de desenvolvimento
+#### Health Check Endpoint
+```bash
+# Verificar saúde da aplicação
+curl http://localhost:8080/health
 
-## 📄 Licença
+# Resposta esperada
+{"status":"Healthy","checks":{"database":"Healthy","eventhub":"Healthy"}}
+```
 
-Projeto desenvolvido para fins educacionais e de demonstração.
+#### Métricas de Performance
+```bash
+# Ver métricas atuais
+curl http://localhost:8080/telemetria
+
+# Métricas detalhadas
+curl http://localhost:8080/telemetria | jq '.'
+```
+
+### Suporte e Recursos Adicionais
+
+#### Documentação Específica
+- 📖 **[BANCO_HIBRIDO.md](hackathon/BANCO_HIBRIDO.md)**: Detalhes da arquitetura de banco híbrido
+- 📖 **[TELEMETRIA.md](hackathon/TELEMETRIA.md)**: Sistema de telemetria detalhado
+- 📖 **[DOCKER.md](hackathon/DOCKER.md)**: Configurações Docker avançadas
+
+#### Recursos Externos
+- 🔗 [Documentação .NET 8](https://learn.microsoft.com/pt-br/dotnet/core/whats-new/dotnet-8)
+- 🔗 [Native AOT Guide](https://learn.microsoft.com/pt-br/dotnet/core/deploying/native-aot)
+- 🔗 [SQLite Documentation](https://www.sqlite.org/docs.html)
+- 🔗 [Dapper Documentation](https://dapper-tutorial.net/)

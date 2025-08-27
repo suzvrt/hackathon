@@ -10,7 +10,7 @@ public static class SimulacoesEndpoint
         app.MapPost("/simulacoes", async (SimulacaoRequest request, ISimularEmprestimoUseCase useCase) =>
         {
             var resultado = await useCase.ExecutarAsync(request);
-            return resultado is null ? Results.NotFound("Nenhum produto compatível encontrado.") : Results.Ok(resultado);
+            return resultado is null ? Results.UnprocessableEntity("Nenhum produto compatível encontrado.") : Results.Ok(resultado);
         }).WithDisplayName("SimularEmprestimo");
 
         app.MapGet("/simulacoes", async ([AsParameters] ListarRequest request, IObterSimulacoesUseCase useCase) =>

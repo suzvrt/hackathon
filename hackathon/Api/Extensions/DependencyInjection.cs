@@ -57,7 +57,7 @@ public static class DependencyInjection
 
         // Serviços de Telemetria
         services.AddSingleton<ITelemetriaService, TelemetriaService>();
-        services.AddSingleton<Channel<TelemetriaMessage>>(sp =>
+        services.AddSingleton(sp =>
         {
             var options = new BoundedChannelOptions(10000)
             {
